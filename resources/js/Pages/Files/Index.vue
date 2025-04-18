@@ -47,20 +47,22 @@
                             <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                 <div v-for="file in files" :key="file.id" class="relative bg-white border rounded-lg shadow-sm">
                                     <div class="p-4">
-                                        <div class="aspect-w-1 aspect-h-1 mb-4 relative w-full h-[150px] group">
-                                            <img
-                                                v-if="file.thumbnail"
-                                                :src="file.thumbnail"
-                                                :alt="file.title"
-                                                class="absolute inset-0 w-full h-full object-cover rounded-lg"
-                                            >
-                                            <div v-else class="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
-                                                <svg v-if="file.type === 'audio'" class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                                                </svg>
-                                                <svg v-else class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                                                </svg>
+                                        <div class="aspect-w-1 aspect-h-1 mb-4 relative w-full h-[180px] group">
+                                            <div class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg shadow-inner py-4">
+                                                <img
+                                                    v-if="file.thumbnail"
+                                                    :src="file.thumbnail"
+                                                    :alt="file.title"
+                                                    class="max-h-[150px] max-w-[150px] object-contain rounded-lg shadow-md"
+                                                >
+                                                <div v-else class="w-full h-full flex items-center justify-center">
+                                                    <svg v-if="file.type === 'audio'" class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                                    </svg>
+                                                    <svg v-else class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                                    </svg>
+                                                </div>
                                             </div>
                                             <!-- Replace Thumbnail Button -->
                                             <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">

@@ -16,11 +16,10 @@ class DownloadCodeService
     private function generateUniqueCode(): string
     {
         do {
-            // Generate a random code (format: XXXX-XXXX)
-            $code = strtoupper(implode('-', [
-                Str::random(4),
-                Str::random(4)
-            ]));
+            // Generate a random code using numbers 2-9 (format: XXXX-XXXX)
+            $firstPart = implode('', array_map(fn() => rand(2, 9), range(1, 4)));
+            $secondPart = implode('', array_map(fn() => rand(2, 9), range(1, 4)));
+            $code = $firstPart . '-' . $secondPart;
         } while (DownloadCode::where('code', $code)->exists());
 
         return $code;

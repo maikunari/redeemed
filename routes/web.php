@@ -8,12 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    return Inertia::render('Redeem/Form');
 });
 
 Route::get('/dashboard', function () {
@@ -41,11 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/codes/{code}/qr', [DownloadCodeController::class, 'generateQr'])->name('codes.qr');
 });
 
-// Public routes for code redemption
-Route::get('/redeem', function () {
-    return Inertia::render('Redeem/Form');
-})->name('codes.redeem-form');
-
+// Public route for code redemption
 Route::post('/redeem', [DownloadCodeController::class, 'redeem'])->name('codes.redeem');
 
 require __DIR__.'/auth.php';
