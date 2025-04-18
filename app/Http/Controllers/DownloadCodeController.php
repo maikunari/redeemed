@@ -28,20 +28,24 @@ class DownloadCodeController extends Controller
     public function store(Request $request, File $file)
     {
         $request->validate([
+            'number_of_codes' => 'required|integer|min:1|max:100',
             'usage_limit' => 'required|integer|min:1',
             'expires_at' => 'nullable|date|after:now',
         ]);
 
         $expiresAt = $request->expires_at ? Carbon::parse($request->expires_at) : null;
         
-        $downloadCode = $this->downloadCodeService->createCode(
-            $file,
-            $request->usage_limit,
-            $expiresAt
-        );
+        // Generate multiple codes
+        for ($i = 0; $i < $request->number_of_codes; $i++) {
+            $this->downloadCodeService->createCode(
+                $file,
+                $request->usage_limit,
+                $expiresAt
+            );
+        }
 
         return redirect()->route('files.index')
-            ->with('success', 'Download code generated successfully.');
+            ->with('success', $request->number_of_codes . ' download code(s) generated successfully.');
     }
 
     /**
@@ -131,6 +135,79 @@ class DownloadCodeController extends Controller
         return response($csv->toString(), 200, [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=codes-{$file->id}.csv",
+        ]);
+    }
+
+    /**
+     * Display the codes management page for a file
+     */
+    public function index(Request $request, File $file)
+    {
+        $query = $file->codes();
+
+        if ($request->has('search')) {
+            $query->where('code', 'like', '%' . $request->search . '%');
+        }
+
+        $codes = $query->orderBy('created_at', 'desc')
+            ->paginate(50)
+            ->through(function ($code) {
+                return [
+                    'id' => $code->id,
+                    'code' => $code->code,
+                    'usage_limit' => $code->usage_limit,
+                    'usage_count' => $code->usage_count,
+                    'expires_at' => $code->expires_at?->format('Y-m-d H:i:s'),
+                    'created_at' => $code->created_at->format('M j, Y g:i A'),
+                ];
+            });
+
+        return Inertia::render('Codes/Index', [
+            'file' => [
+                'id' => $file->id,
+                'title' => $file->title,
+                'filename' => $file->getFirstMedia('files')?->file_name,
+                'size' => $file->file_size,
+                'type' => $file->file_type,
+                'download_count' => $file->download_count,
+                'created_at' => $file->formatted_created_at,
+            ],
+            'codes' => $codes,
+        ]);
+    }
+
+    /**
+     * Display all download codes
+     */
+    public function allCodes(Request $request)
+    {
+        $query = DownloadCode::with('file')->orderBy('created_at', 'desc');
+
+        if ($request->has('search')) {
+            $query->where('code', 'like', '%' . $request->search . '%')
+                  ->orWhereHas('file', function ($q) use ($request) {
+                      $q->where('title', 'like', '%' . $request->search . '%');
+                  });
+        }
+
+        $codes = $query->paginate(50)
+            ->through(function ($code) {
+                return [
+                    'id' => $code->id,
+                    'code' => $code->code,
+                    'usage_limit' => $code->usage_limit,
+                    'usage_count' => $code->usage_count,
+                    'expires_at' => $code->expires_at?->format('Y-m-d H:i:s'),
+                    'created_at' => $code->created_at->format('M j, Y g:i A'),
+                    'file' => [
+                        'id' => $code->file->id,
+                        'title' => $code->file->title,
+                    ],
+                ];
+            });
+
+        return Inertia::render('Codes/AllCodes', [
+            'codes' => $codes,
         ]);
     }
 }

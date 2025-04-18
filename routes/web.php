@@ -31,11 +31,14 @@ Route::middleware('auth')->group(function () {
     Route::patch('/files/{file}', [FileController::class, 'update'])->name('files.update');
     Route::delete('/files/{file}', [FileController::class, 'destroy'])->name('files.destroy');
     Route::get('/files/{file}/download', [FileController::class, 'download'])->name('files.download');
+    Route::post('/files/{file}/thumbnail', [FileController::class, 'updateThumbnail'])->name('files.update-thumbnail');
     
     // Download code routes
+    Route::get('/codes', [DownloadCodeController::class, 'allCodes'])->name('codes.index');
+    Route::get('/files/{file}/codes', [DownloadCodeController::class, 'index'])->name('codes.file');
     Route::post('/files/{file}/codes', [DownloadCodeController::class, 'store'])->name('codes.store');
     Route::get('/files/{file}/codes/export', [DownloadCodeController::class, 'export'])->name('codes.export');
-    Route::get('/codes/{code}/qr', [DownloadCodeController::class, 'generateQrCode'])->name('codes.qr');
+    Route::get('/codes/{code}/qr', [DownloadCodeController::class, 'generateQr'])->name('codes.qr');
 });
 
 // Public routes for code redemption

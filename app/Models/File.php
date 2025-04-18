@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Spatie\Image\Enums\Fit;
 
 class File extends Model implements HasMedia
 {
@@ -12,7 +14,40 @@ class File extends Model implements HasMedia
 
     protected $fillable = ['title'];
 
-    protected $appends = ['file_size', 'file_type', 'formatted_created_at'];
+    protected $appends = ['file_size', 'file_type', 'formatted_created_at', 'download_url', 'thumbnail_url'];
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('files')
+            ->singleFile()
+            ->acceptsMimeTypes(['audio/mpeg', 'application/zip']);
+
+        $this->addMediaCollection('thumbnails')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif']);
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->performOnCollections('thumbnails')
+            ->width(150)
+            ->height(150)
+            ->fit(Fit::Crop)
+            ->nonQueued();
+    }
+
+    public function getDownloadUrlAttribute()
+    {
+        $media = $this->getFirstMedia('files');
+        return $media ? $media->getUrl() : null;
+    }
+
+    public function getThumbnailUrlAttribute()
+    {
+        $media = $this->getFirstMedia('thumbnails');
+        return $media ? $media->getUrl('thumb') : null;
+    }
 
     public function codes()
     {

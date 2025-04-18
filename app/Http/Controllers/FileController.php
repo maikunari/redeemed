@@ -120,6 +120,24 @@ class FileController extends Controller
         return redirect()->route('files.index')->with('success', 'File updated successfully.');
     }
 
+    public function updateThumbnail(Request $request, File $file)
+    {
+        $request->validate([
+            'thumbnail' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        // Remove old thumbnail if it exists
+        if ($file->getFirstMedia('thumbnails')) {
+            $file->getFirstMedia('thumbnails')->delete();
+        }
+
+        // Add new thumbnail
+        $file->addMedia($request->file('thumbnail'))
+             ->toMediaCollection('thumbnails');
+
+        return redirect()->route('files.index')->with('success', 'Thumbnail updated successfully.');
+    }
+
     private function isValidFileType($file)
     {
         $mimeType = $file->getMimeType();

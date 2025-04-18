@@ -47,20 +47,36 @@
                             <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                 <div v-for="file in files" :key="file.id" class="relative bg-white border rounded-lg shadow-sm">
                                     <div class="p-4">
-                                        <div class="aspect-w-3 aspect-h-2 mb-4">
+                                        <div class="aspect-w-1 aspect-h-1 mb-4 relative w-full h-[150px] group">
                                             <img
                                                 v-if="file.thumbnail"
                                                 :src="file.thumbnail"
                                                 :alt="file.title"
-                                                class="object-cover rounded-lg"
+                                                class="absolute inset-0 w-full h-full object-cover rounded-lg"
                                             >
-                                            <div v-else class="flex items-center justify-center bg-gray-100 rounded-lg">
+                                            <div v-else class="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
                                                 <svg v-if="file.type === 'audio'" class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                                                 </svg>
                                                 <svg v-else class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                                                 </svg>
+                                            </div>
+                                            <!-- Replace Thumbnail Button -->
+                                            <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+                                                <input
+                                                    type="file"
+                                                    :id="'thumbnail-' + file.id"
+                                                    class="hidden"
+                                                    accept="image/*"
+                                                    @change="(e) => replaceThumbnail(e, file.id)"
+                                                >
+                                                <label
+                                                    :for="'thumbnail-' + file.id"
+                                                    class="px-3 py-2 bg-white text-gray-700 rounded-md cursor-pointer hover:bg-gray-100 transition-colors"
+                                                >
+                                                    Replace Thumbnail
+                                                </label>
                                             </div>
                                         </div>
                                         <div class="flex items-center justify-between">
@@ -101,45 +117,18 @@
                                                 Download
                                             </a>
                                             <div class="flex space-x-3">
-                                                <button
-                                                    @click="openGenerateCode(file)"
+                                                <a
+                                                    :href="route('codes.index', file.id)"
                                                     class="text-sm font-medium text-indigo-600 hover:text-indigo-500"
                                                 >
-                                                    Generate Code
-                                                </button>
+                                                    Manage Codes
+                                                </a>
                                                 <button
                                                     @click="deleteFile(file.id)"
                                                     class="text-sm font-medium text-red-600 hover:text-red-500"
                                                 >
                                                     Delete
                                                 </button>
-                                            </div>
-                                        </div>
-
-                                        <!-- Download Codes List -->
-                                        <div v-if="file.codes?.length" class="mt-4 border-t pt-4">
-                                            <h5 class="text-sm font-medium text-gray-700 mb-2">Download Codes</h5>
-                                            <div class="space-y-2">
-                                                <div v-for="code in file.codes" :key="code.id" class="flex items-center justify-between text-sm">
-                                                    <div>
-                                                        <span class="font-mono">{{ code.code }}</span>
-                                                        <span class="text-gray-500 ml-2">
-                                                            ({{ code.usage_count }}/{{ code.usage_limit }} uses)
-                                                        </span>
-                                                    </div>
-                                                    <div class="flex space-x-2">
-                                                        <a
-                                                            :href="route('codes.qr', code.id)"
-                                                            target="_blank"
-                                                            class="text-indigo-600 hover:text-indigo-900"
-                                                            title="View QR Code"
-                                                        >
-                                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1v-2a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                                                            </svg>
-                                                        </a>
-                                                    </div>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -282,5 +271,24 @@ const closeGenerateModal = () => {
 const handleCodeGenerated = () => {
     // Refresh the page to show the new code
     window.location.reload();
+};
+
+const replaceThumbnail = async (event, fileId) => {
+    const thumbnail = event.target.files[0];
+    if (!thumbnail) return;
+
+    const formData = new FormData();
+    formData.append('thumbnail', thumbnail);
+
+    try {
+        await axios.post(route('files.update-thumbnail', fileId), formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        window.location.href = route('files.index');
+    } catch (error) {
+        alert(error.response?.data?.message || 'An error occurred while updating the thumbnail');
+    }
 };
 </script> 

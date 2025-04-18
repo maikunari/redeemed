@@ -7,8 +7,25 @@
 
             <form @submit.prevent="submit" class="space-y-4">
                 <div>
+                    <label for="number_of_codes" class="block text-sm font-medium text-gray-700">
+                        Number of Codes to Generate
+                    </label>
+                    <input
+                        id="number_of_codes"
+                        type="number"
+                        v-model="form.number_of_codes"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        required
+                        min="1"
+                    >
+                    <p v-if="form.errors.number_of_codes" class="mt-2 text-sm text-red-600">
+                        {{ form.errors.number_of_codes }}
+                    </p>
+                </div>
+
+                <div>
                     <label for="usage_limit" class="block text-sm font-medium text-gray-700">
-                        Usage Limit
+                        Usage Limit (per code)
                     </label>
                     <input
                         id="usage_limit"
@@ -67,6 +84,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'generated']);
 
 const form = useForm({
+    number_of_codes: 1,
     usage_limit: 1,
     expires_at: '',
 });

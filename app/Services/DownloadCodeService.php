@@ -16,9 +16,8 @@ class DownloadCodeService
     private function generateUniqueCode(): string
     {
         do {
-            // Generate a random code (format: XXXX-XXXX-XXXX)
+            // Generate a random code (format: XXXX-XXXX)
             $code = strtoupper(implode('-', [
-                Str::random(4),
                 Str::random(4),
                 Str::random(4)
             ]));
