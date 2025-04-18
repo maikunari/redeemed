@@ -33,7 +33,9 @@ class File extends Model implements HasMedia
             ->performOnCollections('thumbnails')
             ->width(150)
             ->height(150)
-            ->fit(Fit::Crop)
+            ->fit(Fit::Contain)
+            ->background('ffffff')  // White background for transparent PNGs
+            ->quality(100)         // Maximum quality
             ->nonQueued();
     }
 
