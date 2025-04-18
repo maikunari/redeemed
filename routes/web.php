@@ -30,6 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/files', [FileController::class, 'store'])->name('files.store');
     Route::patch('/files/{file}', [FileController::class, 'update'])->name('files.update');
     Route::delete('/files/{file}', [FileController::class, 'destroy'])->name('files.destroy');
+    Route::get('/files/{file}/download', [FileController::class, 'download'])->name('files.download');
     
     // Download code routes
     Route::post('/files/{file}/codes', [DownloadCodeController::class, 'store'])->name('codes.store');
