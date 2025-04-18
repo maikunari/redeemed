@@ -2,15 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DownloadCode;
 use App\Models\File;
+use App\Models\DownloadCode;
+use App\Services\DownloadCodeService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Validation\ValidationException;
 use League\Csv\Writer;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class DownloadCodeController extends Controller
 {
+    protected $downloadCodeService;
+
+    public function __construct(DownloadCodeService $downloadCodeService)
+    {
+        $this->downloadCodeService = $downloadCodeService;
+    }
+
+    /**
+     * Store a new download code
+     */
     public function store(Request $request, File $file)
     {
         $request->validate([
@@ -18,37 +32,86 @@ class DownloadCodeController extends Controller
             'expires_at' => 'nullable|date|after:now',
         ]);
 
-        $code = DownloadCode::create([
-            'code' => strtoupper(substr(str_replace(['+', '/', '='], '', base64_encode(random_bytes(8))), 0, 8)),
-            'file_id' => $file->id,
-            'usage_limit' => $request->usage_limit,
-            'expires_at' => $request->expires_at,
-        ]);
+        $expiresAt = $request->expires_at ? Carbon::parse($request->expires_at) : null;
+        
+        $downloadCode = $this->downloadCodeService->createCode(
+            $file,
+            $request->usage_limit,
+            $expiresAt
+        );
 
-        return redirect()->route('files.show', $file)->with('success', 'Code generated.');
+        return redirect()->route('files.index')
+            ->with('success', 'Download code generated successfully.');
     }
 
+    /**
+     * Generate QR code for a download code
+     */
+    public function generateQr(DownloadCode $code)
+    {
+        $svg = $this->downloadCodeService->generateQrCode($code);
+        
+        return Response::make($svg, 200, [
+            'Content-Type' => 'image/svg+xml',
+        ]);
+    }
+
+    /**
+     * Show the code redemption form
+     */
+    public function showRedeemForm(Request $request)
+    {
+        return Inertia::render('Redeem/Form', [
+            'code' => $request->query('code'),
+        ]);
+    }
+
+    /**
+     * Redeem a download code
+     */
     public function redeem(Request $request)
     {
-        $request->validate(['code' => 'required|string']);
-        
-        $code = DownloadCode::where('code', $request->code)
-            ->with('file.media')
-            ->firstOrFail();
+        $request->validate([
+            'code' => 'required|string',
+        ]);
 
-        if ($code->usage_count >= $code->usage_limit || 
-            ($code->expires_at && $code->expires_at->isPast())) {
-            return back()->withErrors(['code' => 'Invalid or expired code.']);
+        $downloadCode = $this->downloadCodeService->validateCode($request->code);
+
+        if (!$downloadCode) {
+            throw ValidationException::withMessages([
+                'code' => 'Invalid or expired download code.',
+            ]);
         }
 
-        $code->increment('usage_count');
-        $media = $code->file->getFirstMedia('files');
+        // Record the usage
+        $this->downloadCodeService->recordUsage($downloadCode);
+
+        // Get the file and stream it to the user
+        $media = $downloadCode->file->getFirstMedia('files');
         
         if (!$media) {
-            return back()->withErrors(['code' => 'File not found.']);
+            throw ValidationException::withMessages([
+                'code' => 'File not found.',
+            ]);
         }
 
-        return response()->download($media->getPath(), $media->file_name);
+        return response()->stream(
+            function () use ($media) {
+                $stream = $media->stream();
+                fpassthru($stream);
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
+            },
+            200,
+            [
+                'Content-Type' => $media->mime_type,
+                'Content-Length' => $media->size,
+                'Content-Disposition' => 'attachment; filename="' . $media->file_name . '"',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma' => 'no-cache',
+            ]
+        );
     }
 
     public function export(File $file)
@@ -69,13 +132,5 @@ class DownloadCodeController extends Controller
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=codes-{$file->id}.csv",
         ]);
-    }
-
-    public function generateQrCode(DownloadCode $code)
-    {
-        $url = route('codes.redeem-form', ['code' => $code->code]);
-        $qrCode = QrCode::size(300)->generate($url);
-        
-        return response($qrCode)->header('Content-Type', 'image/svg+xml');
     }
 }
