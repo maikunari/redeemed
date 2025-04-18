@@ -14,7 +14,7 @@ class FileController extends Controller
     public function index()
     {
         return Inertia::render('Files/Index', [
-            'files' => File::with('media')->get()->map(function ($file) {
+            'files' => File::with(['media', 'codes'])->get()->map(function ($file) {
                 return [
                     'id' => $file->id,
                     'title' => $file->title,
@@ -24,6 +24,15 @@ class FileController extends Controller
                     'type' => $file->file_type,
                     'download_count' => $file->download_count,
                     'created_at' => $file->formatted_created_at,
+                    'codes' => $file->codes->map(function ($code) {
+                        return [
+                            'id' => $code->id,
+                            'code' => $code->code,
+                            'usage_limit' => $code->usage_limit,
+                            'usage_count' => $code->usage_count,
+                            'expires_at' => $code->expires_at?->format('Y-m-d H:i:s'),
+                        ];
+                    }),
                 ];
             }),
         ]);

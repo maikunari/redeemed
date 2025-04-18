@@ -100,12 +100,47 @@
                                             >
                                                 Download
                                             </a>
-                                            <button
-                                                @click="deleteFile(file.id)"
-                                                class="text-sm font-medium text-red-600 hover:text-red-500"
-                                            >
-                                                Delete
-                                            </button>
+                                            <div class="flex space-x-3">
+                                                <button
+                                                    @click="openGenerateCode(file)"
+                                                    class="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                                                >
+                                                    Generate Code
+                                                </button>
+                                                <button
+                                                    @click="deleteFile(file.id)"
+                                                    class="text-sm font-medium text-red-600 hover:text-red-500"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Download Codes List -->
+                                        <div v-if="file.codes?.length" class="mt-4 border-t pt-4">
+                                            <h5 class="text-sm font-medium text-gray-700 mb-2">Download Codes</h5>
+                                            <div class="space-y-2">
+                                                <div v-for="code in file.codes" :key="code.id" class="flex items-center justify-between text-sm">
+                                                    <div>
+                                                        <span class="font-mono">{{ code.code }}</span>
+                                                        <span class="text-gray-500 ml-2">
+                                                            ({{ code.usage_count }}/{{ code.usage_limit }} uses)
+                                                        </span>
+                                                    </div>
+                                                    <div class="flex space-x-2">
+                                                        <a
+                                                            :href="route('codes.qr', code.id)"
+                                                            target="_blank"
+                                                            class="text-indigo-600 hover:text-indigo-900"
+                                                            title="View QR Code"
+                                                        >
+                                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1v-2a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                                            </svg>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -116,6 +151,13 @@
             </div>
         </div>
     </AuthenticatedLayout>
+
+    <GenerateCodeModal
+        :show="showGenerateModal"
+        :file-id="selectedFileId"
+        @close="closeGenerateModal"
+        @generated="handleCodeGenerated"
+    />
 </template>
 
 <script setup>
@@ -123,6 +165,7 @@ import { ref, onMounted } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import FileUploader from '@/Components/FileUploader.vue';
+import GenerateCodeModal from '@/Components/GenerateCodeModal.vue';
 
 const props = defineProps({
     files: {
@@ -138,6 +181,8 @@ const title = ref('');
 const uploading = ref(false);
 const editingFile = ref(null);
 const editTitle = ref('');
+const showGenerateModal = ref(false);
+const selectedFileId = ref(null);
 
 const handleFileSelected = (file) => {
     selectedFile.value = file;
@@ -222,5 +267,20 @@ const updateFileTitle = async (fileId) => {
         alert('An error occurred while updating the file title');
     }
     cancelEdit();
+};
+
+const openGenerateCode = (file) => {
+    selectedFileId.value = file.id;
+    showGenerateModal.value = true;
+};
+
+const closeGenerateModal = () => {
+    showGenerateModal.value = false;
+    selectedFileId.value = null;
+};
+
+const handleCodeGenerated = () => {
+    // Refresh the page to show the new code
+    window.location.reload();
 };
 </script> 
