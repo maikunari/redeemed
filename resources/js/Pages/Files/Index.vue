@@ -25,6 +25,7 @@
                                     type="text"
                                     id="title"
                                     v-model="title"
+                                    :placeholder="selectedFile?.name || 'Enter title'"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                     required
                                 >
@@ -54,13 +55,44 @@
                                                 class="object-cover rounded-lg"
                                             >
                                             <div v-else class="flex items-center justify-center bg-gray-100 rounded-lg">
-                                                <svg class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                <svg v-if="file.type === 'audio'" class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                                </svg>
+                                                <svg v-else class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                                                 </svg>
                                             </div>
                                         </div>
-                                        <h4 class="text-lg font-medium text-gray-900">{{ file.title }}</h4>
-                                        <p class="mt-1 text-sm text-gray-500">{{ file.filename }}</p>
+                                        <div class="flex items-center justify-between">
+                                            <div v-if="editingFile === file.id">
+                                                <input
+                                                    type="text"
+                                                    v-model="editTitle"
+                                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    @keyup.enter="updateFileTitle(file.id)"
+                                                    @keyup.esc="cancelEdit"
+                                                >
+                                            </div>
+                                            <h4 v-else class="text-lg font-medium text-gray-900" @dblclick="startEdit(file)">
+                                                {{ file.title }}
+                                            </h4>
+                                            <button 
+                                                v-if="!editingFile"
+                                                @click="startEdit(file)" 
+                                                class="text-gray-400 hover:text-gray-500"
+                                                title="Edit title"
+                                            >
+                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div class="mt-2 text-sm text-gray-500">
+                                            <p>{{ file.filename }}</p>
+                                            <p>Size: {{ file.size }}</p>
+                                            <p>Uploaded: {{ file.created_at }}</p>
+                                            <p>Downloads: {{ file.download_count }}</p>
+                                        </div>
                                         <div class="mt-4 flex justify-between">
                                             <a
                                                 :href="route('files.download', file.id)"
@@ -104,6 +136,8 @@ const selectedFile = ref(null);
 const selectedThumbnail = ref(null);
 const title = ref('');
 const uploading = ref(false);
+const editingFile = ref(null);
+const editTitle = ref('');
 
 const handleFileSelected = (file) => {
     selectedFile.value = file;
@@ -166,5 +200,27 @@ const deleteFile = async (fileId) => {
     } catch (error) {
         alert('An error occurred while deleting the file');
     }
+};
+
+const startEdit = (file) => {
+    editingFile.value = file.id;
+    editTitle.value = file.title;
+};
+
+const cancelEdit = () => {
+    editingFile.value = null;
+    editTitle.value = '';
+};
+
+const updateFileTitle = async (fileId) => {
+    try {
+        await axios.patch(route('files.update', fileId), {
+            title: editTitle.value
+        });
+        window.location.href = route('files.index');
+    } catch (error) {
+        alert('An error occurred while updating the file title');
+    }
+    cancelEdit();
 };
 </script> 

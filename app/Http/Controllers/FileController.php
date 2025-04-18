@@ -20,6 +20,10 @@ class FileController extends Controller
                     'title' => $file->title,
                     'thumbnail' => $file->getFirstMediaUrl('thumbnails') ?: null,
                     'filename' => $file->getFirstMedia('files')?->file_name,
+                    'size' => $file->file_size,
+                    'type' => $file->file_type,
+                    'download_count' => $file->download_count,
+                    'created_at' => $file->formatted_created_at,
                 ];
             }),
         ]);
@@ -61,6 +65,50 @@ class FileController extends Controller
     {
         $file->delete();
         return redirect()->route('files.index')->with('success', 'File deleted successfully.');
+    }
+
+    public function download(File $file)
+    {
+        $media = $file->getFirstMedia('files');
+        
+        if (!$media) {
+            return redirect()->back()->with('error', 'File not found.');
+        }
+
+        // Track download (optional)
+        $file->increment('download_count');
+
+        // Stream the file with proper headers
+        return response()->stream(
+            function () use ($media) {
+                $stream = $media->stream();
+                fpassthru($stream);
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
+            },
+            200,
+            [
+                'Content-Type' => $media->mime_type,
+                'Content-Length' => $media->size,
+                'Content-Disposition' => 'attachment; filename="' . $media->file_name . '"',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma' => 'no-cache',
+            ]
+        );
+    }
+
+    public function update(Request $request, File $file)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+        ]);
+
+        $file->update([
+            'title' => $request->title,
+        ]);
+
+        return redirect()->route('files.index')->with('success', 'File updated successfully.');
     }
 
     private function isValidFileType($file)
