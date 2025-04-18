@@ -10,11 +10,7 @@ class File extends Model implements HasMedia
 {
     use InteractsWithMedia;
 
-    protected $fillable = [
-        'title',
-        'path',
-        'thumbnail',
-    ];
+    protected $fillable = ['title'];
 
     protected $appends = ['file_size', 'file_type', 'formatted_created_at'];
 
