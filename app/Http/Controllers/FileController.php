@@ -18,7 +18,7 @@ class FileController extends Controller
                 return [
                     'id' => $file->id,
                     'title' => $file->title,
-                    'thumbnail' => $file->getFirstMediaUrl('thumbnails') ?: null,
+                    'thumbnail' => $file->thumbnail_url,
                     'filename' => $file->getFirstMedia('files')?->file_name,
                     'size' => $file->file_size,
                     'type' => $file->file_type,
