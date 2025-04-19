@@ -1,7 +1,10 @@
 <template>
     <Head title="Download Code Redemption" />
 
-    <div class="min-h-screen bg-gradient-to-br from-rose-400 via-fuchsia-400 to-indigo-400 relative overflow-hidden">
+    <div class="min-h-screen bg-gradient-to-br from-violet-500 via-blue-500 to-indigo-600 relative overflow-hidden">
+        <!-- Particles animation -->
+        <div id="particles-js" class="absolute inset-0 z-0"></div>
+        
         <!-- Diagonal white overlay -->
         <div class="absolute inset-0 bg-white transform -skew-y-12 origin-top-left translate-y-1/2"></div>
         
@@ -200,6 +203,94 @@ onMounted(() => {
             if (index < 6 && /[2-9]/.test(digit)) codeDigits.value[index] = digit;
         });
     }
+
+    // Load particles.js dynamically
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js';
+    script.onload = () => {
+        window.particlesJS('particles-js', {
+            particles: {
+                number: {
+                    value: 40,
+                    density: {
+                        enable: true,
+                        value_area: 800
+                    }
+                },
+                color: {
+                    value: ['#ffffff', '#e0e7ff', '#c7d2fe']
+                },
+                shape: {
+                    type: ['circle', 'triangle', 'polygon'],
+                    polygon: {
+                        nb_sides: 6
+                    }
+                },
+                opacity: {
+                    value: 0.2,
+                    random: true,
+                    anim: {
+                        enable: true,
+                        speed: 0.5,
+                        opacity_min: 0.1,
+                        sync: false
+                    }
+                },
+                size: {
+                    value: 4,
+                    random: true,
+                    anim: {
+                        enable: true,
+                        speed: 1,
+                        size_min: 2,
+                        sync: false
+                    }
+                },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: '#e0e7ff',
+                    opacity: 0.15,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 0.8,
+                    direction: 'none',
+                    random: true,
+                    straight: false,
+                    out_mode: 'out',
+                    bounce: false,
+                    attract: {
+                        enable: true,
+                        rotateX: 600,
+                        rotateY: 1200
+                    }
+                }
+            },
+            interactivity: {
+                detect_on: 'canvas',
+                events: {
+                    onhover: {
+                        enable: true,
+                        mode: 'bubble'
+                    },
+                    resize: true
+                },
+                modes: {
+                    bubble: {
+                        distance: 200,
+                        size: 6,
+                        duration: 0.8,
+                        opacity: 0.3,
+                        speed: 2
+                    }
+                }
+            },
+            retina_detect: true
+        });
+    };
+    document.body.appendChild(script);
 });
 
 const handleInput = (index) => {
@@ -339,7 +430,7 @@ const submit = async () => {
 /* Add subtle gradient animation */
 .bg-gradient-to-br {
     background-size: 400% 400%;
-    animation: gradient 15s ease infinite;
+    animation: gradient 30s ease infinite;
 }
 
 @keyframes gradient {
@@ -363,6 +454,14 @@ input::-webkit-inner-spin-button {
 
 input[type=number] {
     -moz-appearance: textfield;
+}
+
+#particles-js {
+    pointer-events: none;
+}
+
+#particles-js canvas {
+    opacity: 0.2;
 }
 </style>
 
