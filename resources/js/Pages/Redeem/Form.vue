@@ -211,51 +211,48 @@ onMounted(() => {
         window.particlesJS('particles-js', {
             particles: {
                 number: {
-                    value: 40,
+                    value: 100,
                     density: {
                         enable: true,
                         value_area: 800
                     }
                 },
                 color: {
-                    value: ['#ffffff', '#e0e7ff', '#c7d2fe']
+                    value: ['#ffffff', '#ffd700', '#7af5ff', '#ffc0cb']  // White, gold, cyan, and pink stars
                 },
                 shape: {
-                    type: ['circle', 'triangle', 'polygon'],
-                    polygon: {
-                        nb_sides: 6
-                    }
+                    type: 'circle'
                 },
                 opacity: {
-                    value: 0.2,
+                    value: 0.6,
                     random: true,
                     anim: {
                         enable: true,
-                        speed: 0.5,
+                        speed: 0.3,
                         opacity_min: 0.1,
                         sync: false
                     }
                 },
                 size: {
-                    value: 4,
+                    value: 2.5,
                     random: true,
                     anim: {
                         enable: true,
                         speed: 1,
-                        size_min: 2,
+                        size_min: 0.1,
                         sync: false
                     }
                 },
                 line_linked: {
                     enable: true,
                     distance: 150,
-                    color: '#e0e7ff',
-                    opacity: 0.15,
+                    color: '#ffffff',
+                    opacity: 0.1,
                     width: 1
                 },
                 move: {
                     enable: true,
-                    speed: 0.8,
+                    speed: 0.3,
                     direction: 'none',
                     random: true,
                     straight: false,
@@ -273,17 +270,21 @@ onMounted(() => {
                 events: {
                     onhover: {
                         enable: true,
-                        mode: 'bubble'
+                        mode: 'repulse'
+                    },
+                    onclick: {
+                        enable: true,
+                        mode: 'push'
                     },
                     resize: true
                 },
                 modes: {
-                    bubble: {
-                        distance: 200,
-                        size: 6,
-                        duration: 0.8,
-                        opacity: 0.3,
-                        speed: 2
+                    repulse: {
+                        distance: 100,
+                        duration: 0.4
+                    },
+                    push: {
+                        particles_nb: 4
                     }
                 }
             },
