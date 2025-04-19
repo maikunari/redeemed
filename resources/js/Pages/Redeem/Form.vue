@@ -1,26 +1,31 @@
 <template>
     <Head title="Download Code Redemption" />
 
-    <div class="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div class="sm:mx-auto sm:w-full sm:max-w-md">
-            <!-- Logo area - replace src with your actual logo -->
-            <img class="mx-auto h-24 w-auto" src="/logo.png" alt="Your Logo" />
-            
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Enter Your Download Code
-            </h2>
-            <p class="mt-2 text-center text-sm text-gray-600">
-                Type or paste your code below
-            </p>
+    <div class="min-h-screen bg-white flex flex-col">
+        <!-- Header -->
+        <div class="border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex justify-center">
+                <div class="flex items-center gap-3 sm:gap-4">
+                    <img class="h-12 w-12 sm:h-20 sm:w-20 object-contain" :src="logo || '/logo.png'" alt="Site Logo" />
+                    <span v-if="siteName" class="text-lg sm:text-2xl font-semibold text-gray-900">{{ siteName }}</span>
+                </div>
+            </div>
         </div>
 
-        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-            <div class="bg-white py-8 px-4 shadow-xl shadow-indigo-50/20 sm:rounded-xl sm:px-10 relative overflow-hidden">
-                <!-- Background decoration -->
-                <div class="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 opacity-50"></div>
-                
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-5rem)] py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
+            <div class="w-full max-w-md space-y-6 sm:space-y-8">
+                <div class="text-center">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">
+                        Enter Your Download Code
+                    </h2>
+                    <p class="mt-2 text-sm text-gray-600">
+                        Type or paste your code below
+                    </p>
+                </div>
+
                 <!-- Success message -->
-                <div v-if="showSuccess" class="mb-6 p-4 bg-green-50 rounded-lg relative">
+                <div v-if="showSuccess" class="p-4 bg-green-50 rounded-lg relative">
                     <div class="flex">
                         <div class="flex-shrink-0">
                             <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -35,12 +40,12 @@
                     </div>
                 </div>
 
-                <form @submit.prevent="submit" class="relative space-y-6">
+                <form @submit.prevent="submit" class="space-y-8">
                     <div>
                         <label class="sr-only">Download Code</label>
-                        <div class="flex justify-center gap-2 items-center">
+                        <div class="flex justify-center gap-1.5 sm:gap-3 items-center">
                             <!-- First 4 digits -->
-                            <div class="flex gap-2">
+                            <div class="flex gap-1.5 sm:gap-3">
                                 <template v-for="index in 4" :key="`first-${index}`">
                                     <input
                                         type="text"
@@ -52,7 +57,7 @@
                                         @input="handleInput(index - 1)"
                                         @keydown="handleKeydown($event, index - 1)"
                                         @paste="handlePaste"
-                                        class="w-12 h-14 text-center text-2xl font-semibold border-2 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        class="w-[2.75rem] h-[2.75rem] sm:w-12 sm:h-14 text-center text-lg sm:text-2xl font-semibold border-2 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                         :class="{
                                             'border-red-300 text-red-900': form.errors.code,
                                             'border-gray-300': !form.errors.code
@@ -63,12 +68,12 @@
                             </div>
 
                             <!-- Dash separator -->
-                            <div class="w-6 flex items-center justify-center">
-                                <div class="h-0.5 w-4 bg-gray-400"></div>
+                            <div class="w-4 sm:w-6 flex items-center justify-center">
+                                <div class="h-0.5 w-2.5 sm:w-5 bg-gray-300"></div>
                             </div>
 
                             <!-- Last 4 digits -->
-                            <div class="flex gap-2">
+                            <div class="flex gap-1.5 sm:gap-3">
                                 <template v-for="index in 4" :key="`second-${index}`">
                                     <input
                                         type="text"
@@ -80,7 +85,7 @@
                                         @input="handleInput(index + 3)"
                                         @keydown="handleKeydown($event, index + 3)"
                                         @paste="handlePaste"
-                                        class="w-12 h-14 text-center text-2xl font-semibold border-2 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        class="w-[2.75rem] h-[2.75rem] sm:w-12 sm:h-14 text-center text-lg sm:text-2xl font-semibold border-2 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                         :class="{
                                             'border-red-300 text-red-900': form.errors.code,
                                             'border-gray-300': !form.errors.code
@@ -90,7 +95,7 @@
                                 </template>
                             </div>
                         </div>
-                        <p v-if="form.errors.code" class="mt-2 text-sm text-center text-red-600">
+                        <p v-if="form.errors.code" class="mt-3 text-sm text-center text-red-600">
                             {{ form.errors.code }}
                         </p>
                     </div>
@@ -99,7 +104,7 @@
                         <button
                             type="submit"
                             :disabled="!isCodeComplete || form.processing"
-                            class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 transition-all duration-150"
+                            class="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-base sm:text-sm font-medium text-white bg-indigo-600 transition-all duration-150"
                             :class="{
                                 'opacity-75 cursor-not-allowed': !isCodeComplete || form.processing,
                                 'hover:bg-indigo-700': isCodeComplete && !form.processing
@@ -114,16 +119,14 @@
                     </div>
                 </form>
 
-                <div class="mt-6">
-                    <div class="relative">
-                        <div class="absolute inset-0 flex items-center">
-                            <div class="w-full border-t border-gray-300"></div>
-                        </div>
-                        <div class="relative flex justify-center text-sm">
-                            <span class="px-2 bg-white text-gray-500">
-                                Need help? Contact support
-                            </span>
-                        </div>
+                <div class="relative mt-8">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-4 bg-white text-gray-500">
+                            Need help? Contact support
+                        </span>
                     </div>
                 </div>
             </div>
@@ -137,6 +140,14 @@ import { ref, computed, onMounted } from 'vue';
 
 const props = defineProps({
     code: {
+        type: String,
+        default: '',
+    },
+    siteName: {
+        type: String,
+        default: '',
+    },
+    logo: {
         type: String,
         default: '',
     },
