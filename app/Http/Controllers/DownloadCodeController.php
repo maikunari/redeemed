@@ -44,7 +44,7 @@ class DownloadCodeController extends Controller
             );
         }
 
-        return redirect()->route('files.index')
+        return redirect()->route('codes.index', ['file' => $file->id])
             ->with('success', $request->number_of_codes . ' download code(s) generated successfully.');
     }
 
@@ -76,7 +76,7 @@ class DownloadCodeController extends Controller
     public function redeem(Request $request)
     {
         $request->validate([
-            'code' => 'required|string',
+            'code' => ['required', 'string', 'size:6', 'regex:/^[2-9]{6}$/'],
         ]);
 
         $downloadCode = $this->downloadCodeService->validateCode($request->code);
@@ -132,9 +132,11 @@ class DownloadCodeController extends Controller
             ]);
         }
 
+        $safeTitle = str_replace(['/', '\\', '?', '%', '*', ':', '|', '"', '<', '>', '.', ','], '-', $file->title);
+        
         return response($csv->toString(), 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=codes-{$file->id}.csv",
+            'Content-Disposition' => "attachment; filename=\"{$safeTitle} ({$file->codes->count()}).csv\"",
         ]);
     }
 
@@ -183,11 +185,17 @@ class DownloadCodeController extends Controller
     {
         $query = DownloadCode::with('file')->orderBy('created_at', 'desc');
 
+        if ($request->has('file') && $request->file !== '') {
+            $query->where('file_id', $request->file);
+        }
+
         if ($request->has('search')) {
-            $query->where('code', 'like', '%' . $request->search . '%')
+            $query->where(function($q) use ($request) {
+                $q->where('code', 'like', '%' . $request->search . '%')
                   ->orWhereHas('file', function ($q) use ($request) {
                       $q->where('title', 'like', '%' . $request->search . '%');
                   });
+            });
         }
 
         $codes = $query->paginate(50)
@@ -197,7 +205,7 @@ class DownloadCodeController extends Controller
                     'code' => $code->code,
                     'usage_limit' => $code->usage_limit,
                     'usage_count' => $code->usage_count,
-                    'expires_at' => $code->expires_at?->format('Y-m-d H:i:s'),
+                    'expires_at' => $code->expires_at ? $code->expires_at->format('Y-m-d H:i:s') : null,
                     'created_at' => $code->created_at->format('M j, Y g:i A'),
                     'file' => [
                         'id' => $code->file->id,
@@ -208,6 +216,7 @@ class DownloadCodeController extends Controller
 
         return Inertia::render('Codes/AllCodes', [
             'codes' => $codes,
+            'files' => File::select('id', 'title')->orderBy('title')->get(),
         ]);
     }
 }
