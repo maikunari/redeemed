@@ -1,12 +1,12 @@
 <template>
     <Head title="Download Code Redemption" />
 
-    <div class="min-h-screen bg-gradient-to-br from-violet-500 via-blue-500 to-indigo-600 relative overflow-hidden">
+    <div class="min-h-screen bg-gradient-to-br from-[#0a192f] via-[#2d1b4e] to-[#1a0b2e] relative overflow-hidden">
         <!-- Particles animation -->
         <div id="particles-js" class="absolute inset-0 z-0"></div>
         
         <!-- Diagonal white overlay -->
-        <div class="absolute inset-0 bg-white transform -skew-y-12 origin-top-left translate-y-1/2"></div>
+        <div class="absolute inset-0 bg-white/95 transform -skew-y-12 origin-top-left translate-y-1/2"></div>
         
         <!-- Noise texture overlay -->
         <div class="absolute inset-0 opacity-50" style="background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iLjc1IiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjMwMCIgaGVpZ2h0PSIzMDAiIGZpbHRlcj0idXJsKCNhKSIgb3BhY2l0eT0iLjA1Ii8+PC9zdmc+');"></div>
@@ -211,42 +211,42 @@ onMounted(() => {
         window.particlesJS('particles-js', {
             particles: {
                 number: {
-                    value: 100,
+                    value: 80,
                     density: {
                         enable: true,
-                        value_area: 800
+                        value_area: 1000
                     }
                 },
                 color: {
-                    value: ['#ffffff', '#ffd700', '#7af5ff', '#ffc0cb']  // White, gold, cyan, and pink stars
+                    value: ['#8e44ad', '#9b59b6', '#3498db', '#2980b9', '#ffffff']
                 },
                 shape: {
                     type: 'circle'
                 },
                 opacity: {
-                    value: 0.6,
+                    value: 0.3,
                     random: true,
                     anim: {
                         enable: true,
-                        speed: 0.3,
+                        speed: 0.2,
                         opacity_min: 0.1,
                         sync: false
                     }
                 },
                 size: {
-                    value: 2.5,
+                    value: 4,
                     random: true,
                     anim: {
                         enable: true,
-                        speed: 1,
-                        size_min: 0.1,
+                        speed: 0.5,
+                        size_min: 0.5,
                         sync: false
                     }
                 },
                 line_linked: {
                     enable: true,
                     distance: 150,
-                    color: '#ffffff',
+                    color: '#9b59b6',
                     opacity: 0.1,
                     width: 1
                 },
@@ -260,8 +260,8 @@ onMounted(() => {
                     bounce: false,
                     attract: {
                         enable: true,
-                        rotateX: 600,
-                        rotateY: 1200
+                        rotateX: 800,
+                        rotateY: 1500
                     }
                 }
             },
@@ -270,21 +270,19 @@ onMounted(() => {
                 events: {
                     onhover: {
                         enable: true,
-                        mode: 'repulse'
+                        mode: 'grab'
                     },
                     onclick: {
-                        enable: true,
-                        mode: 'push'
+                        enable: false
                     },
                     resize: true
                 },
                 modes: {
-                    repulse: {
-                        distance: 100,
-                        duration: 0.4
-                    },
-                    push: {
-                        particles_nb: 4
+                    grab: {
+                        distance: 200,
+                        line_linked: {
+                            opacity: 0.2
+                        }
                     }
                 }
             },
@@ -431,7 +429,7 @@ const submit = async () => {
 /* Add subtle gradient animation */
 .bg-gradient-to-br {
     background-size: 400% 400%;
-    animation: gradient 30s ease infinite;
+    animation: gradient 45s ease infinite;
 }
 
 @keyframes gradient {
@@ -462,7 +460,7 @@ input[type=number] {
 }
 
 #particles-js canvas {
-    opacity: 0.2;
+    opacity: 0.8;
 }
 </style>
 
