@@ -4,8 +4,8 @@
     <div class="min-h-screen bg-white flex flex-col">
         <!-- Header -->
         <div class="border-b border-gray-200">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex justify-center">
-                <div class="flex items-center gap-3 sm:gap-4">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+                <div class="flex flex-col items-center gap-2 sm:gap-3">
                     <img class="h-12 w-12 sm:h-20 sm:w-20 object-contain" :src="logo || '/logo.png'" alt="Site Logo" />
                     <span v-if="siteName" class="text-lg sm:text-2xl font-semibold text-gray-900">{{ siteName }}</span>
                 </div>
@@ -44,9 +44,8 @@
                     <div>
                         <label class="sr-only">Download Code</label>
                         <div class="flex justify-center gap-1.5 sm:gap-3 items-center">
-                            <!-- First 4 digits -->
                             <div class="flex gap-1.5 sm:gap-3">
-                                <template v-for="index in 4" :key="`first-${index}`">
+                                <template v-for="index in 6" :key="`digit-${index}`">
                                     <input
                                         type="text"
                                         inputmode="numeric"
@@ -56,34 +55,6 @@
                                         :ref="el => { if (el) codeInputs[index - 1] = el }"
                                         @input="handleInput(index - 1)"
                                         @keydown="handleKeydown($event, index - 1)"
-                                        @paste="handlePaste"
-                                        class="w-[2.75rem] h-[2.75rem] sm:w-12 sm:h-14 text-center text-lg sm:text-2xl font-semibold border-2 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        :class="{
-                                            'border-red-300 text-red-900': form.errors.code,
-                                            'border-gray-300': !form.errors.code
-                                        }"
-                                        :disabled="form.processing"
-                                    >
-                                </template>
-                            </div>
-
-                            <!-- Dash separator -->
-                            <div class="w-4 sm:w-6 flex items-center justify-center">
-                                <div class="h-0.5 w-2.5 sm:w-5 bg-gray-300"></div>
-                            </div>
-
-                            <!-- Last 4 digits -->
-                            <div class="flex gap-1.5 sm:gap-3">
-                                <template v-for="index in 4" :key="`second-${index}`">
-                                    <input
-                                        type="text"
-                                        inputmode="numeric"
-                                        maxlength="1"
-                                        pattern="[2-9]"
-                                        v-model="codeDigits[index + 3]"
-                                        :ref="el => { if (el) codeInputs[index + 3] = el }"
-                                        @input="handleInput(index + 3)"
-                                        @keydown="handleKeydown($event, index + 3)"
                                         @paste="handlePaste"
                                         class="w-[2.75rem] h-[2.75rem] sm:w-12 sm:h-14 text-center text-lg sm:text-2xl font-semibold border-2 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                         :class="{
@@ -154,7 +125,7 @@ const props = defineProps({
 });
 
 const showSuccess = ref(false);
-const codeDigits = ref(Array(8).fill(''));
+const codeDigits = ref(Array(6).fill(''));
 const codeInputs = ref([]);
 
 const form = useForm({
@@ -173,9 +144,9 @@ onMounted(() => {
     
     // If code is provided, fill the digits
     if (props.code) {
-        const digits = props.code.replace('-', '').split('');
+        const digits = props.code.split('');
         digits.forEach((digit, index) => {
-            if (index < 8 && /[2-9]/.test(digit)) codeDigits.value[index] = digit;
+            if (index < 6 && /[2-9]/.test(digit)) codeDigits.value[index] = digit;
         });
     }
 });
@@ -189,7 +160,7 @@ const handleInput = (index) => {
         digit = digit.replace(/[^2-9]/g, '');
         codeDigits.value[index] = digit;
         
-        if (digit && index < 7 && codeInputs.value[index + 1]) {
+        if (digit && index < 5 && codeInputs.value[index + 1]) {
             codeInputs.value[index + 1].focus();
         }
     }
@@ -210,7 +181,7 @@ const handleKeydown = (event, index) => {
     }
     // Handle right arrow
     else if (event.key === 'ArrowRight') {
-        if (index < 7 && codeInputs.value[index + 1]) {
+        if (index < 5 && codeInputs.value[index + 1]) {
             codeInputs.value[index + 1].focus();
         }
     }
@@ -220,29 +191,27 @@ const handlePaste = (event) => {
     event.preventDefault();
     const pastedText = event.clipboardData.getData('text')
         .replace(/[^2-9]/g, '') // Only keep digits 2-9
-        .slice(0, 8); // Take only first 8 digits
+        .slice(0, 6); // Take only first 6 digits
     
     const digits = pastedText.split('');
     digits.forEach((digit, index) => {
-        if (index < 8) codeDigits.value[index] = digit;
+        if (index < 6) codeDigits.value[index] = digit;
     });
     
     // Focus the next empty input or the last input
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 6; i++) {
         if (!codeDigits.value[i]) {
             codeInputs.value[i].focus();
             break;
         }
-        if (i === 7) {
+        if (i === 5) {
             codeInputs.value[i].focus();
         }
     }
 };
 
 const submit = () => {
-    // Format code as XXXX-XXXX
-    const formattedCode = `${codeDigits.value.slice(0, 4).join('')}-${codeDigits.value.slice(4).join('')}`;
-    form.code = formattedCode;
+    form.code = codeDigits.value.join('');
     
     form.post(route('codes.redeem'), {
         preserveScroll: true,
@@ -253,7 +222,7 @@ const submit = () => {
             }, 5000);
         },
         onError: () => {
-            codeDigits.value = Array(8).fill('');
+            codeDigits.value = Array(6).fill('');
             if (codeInputs.value[0]) {
                 codeInputs.value[0].focus();
             }
