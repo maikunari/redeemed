@@ -14,6 +14,30 @@
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
+                        <!-- File Selection and Generate Button -->
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="w-1/2">
+                                <label for="file-select" class="block text-sm font-medium text-gray-700 mb-1">Select File</label>
+                                <select
+                                    id="file-select"
+                                    v-model="selectedFileId"
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                >
+                                    <option value="">All Files</option>
+                                    <option v-for="file in files" :key="file.id" :value="file.id">
+                                        {{ file.title }}
+                                    </option>
+                                </select>
+                            </div>
+                            <button
+                                @click="openGenerateModal"
+                                :disabled="!selectedFileId"
+                                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Generate Codes
+                            </button>
+                        </div>
+
                         <!-- Search and Filters -->
                         <div class="mb-6">
                             <div class="max-w-lg">
@@ -110,32 +134,73 @@
             </div>
         </div>
     </Modal>
+
+    <!-- Generate Codes Modal -->
+    <GenerateCodeModal
+        :show="showGenerateModal"
+        :file-id="selectedFileId"
+        @close="closeGenerateModal"
+        @generated="handleCodeGenerated"
+    />
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import Modal from '@/Components/Modal.vue';
+import GenerateCodeModal from '@/Components/GenerateCodeModal.vue';
 
 const props = defineProps({
     codes: Object,
+    files: {
+        type: Array,
+        required: true,
+    }
 });
 
 const search = ref('');
 const showQrModal = ref(false);
 const selectedCode = ref(null);
+const selectedFileId = ref('');
+const showGenerateModal = ref(false);
 
 const debouncedSearch = debounce(() => {
     router.get(
         route('codes.index'),
-        { search: search.value },
+        { 
+            search: search.value,
+            file: selectedFileId.value
+        },
         { preserveState: true, preserveScroll: true }
     );
 }, 300);
+
+watch(selectedFileId, () => {
+    router.get(
+        route('codes.index'),
+        { 
+            search: search.value,
+            file: selectedFileId.value
+        },
+        { preserveState: true, preserveScroll: true }
+    );
+});
+
+const openGenerateModal = () => {
+    showGenerateModal.value = true;
+};
+
+const closeGenerateModal = () => {
+    showGenerateModal.value = false;
+};
+
+const handleCodeGenerated = () => {
+    router.reload({ only: ['codes'] });
+};
 
 const showQrCode = (code) => {
     selectedCode.value = code;
