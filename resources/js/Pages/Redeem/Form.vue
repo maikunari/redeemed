@@ -24,23 +24,51 @@
                     </p>
                 </div>
 
-                <!-- Success message -->
-                <div v-if="showSuccess" class="p-4 bg-green-50 rounded-lg relative">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                            </svg>
+                <!-- Success state -->
+                <div v-if="downloadStarted" class="space-y-6">
+                    <div class="p-6 bg-green-50 rounded-lg text-center">
+                        <svg class="mx-auto h-12 w-12 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h3 class="mt-4 text-lg font-medium text-green-800">Thank you!</h3>
+                        <p class="mt-2 text-sm text-green-600">
+                            Your download should begin automatically.
+                        </p>
+                        <button 
+                            v-if="!showTroubleshooting"
+                            @click="showTroubleshooting = true"
+                            class="mt-4 text-sm text-indigo-600 hover:text-indigo-800 underline"
+                        >
+                            Click here if your download doesn't start
+                        </button>
+                        <div v-if="showTroubleshooting" class="mt-4 text-sm text-gray-600 space-y-2">
+                            <ul class="list-disc text-left pl-4 space-y-1">
+                                <li>Check your browser's download settings</li>
+                                <li>Ensure pop-ups aren't blocked for this site</li>
+                                <li>Try the <a :href="route('codes.redeem') + '?code=' + form.code" class="underline hover:text-gray-900">backup download link</a> (within 5 minutes)</li>
+                            </ul>
                         </div>
-                        <div class="ml-3">
-                            <p class="text-sm font-medium text-green-800">
-                                Your download will begin automatically
-                            </p>
-                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-center gap-4">
+                        <button
+                            @click="resetForm"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                            Enter Another Code
+                        </button>
+                        
+                        <a
+                            href="/"
+                            class="text-sm text-gray-600 hover:text-gray-900"
+                        >
+                            Return to Home
+                        </a>
                     </div>
                 </div>
 
-                <form @submit.prevent="submit" class="space-y-8">
+                <!-- Code input form -->
+                <form v-else @submit.prevent="submit" class="space-y-8">
                     <div>
                         <label class="sr-only">Download Code</label>
                         <div class="flex justify-center gap-1.5 sm:gap-3 items-center">
@@ -125,8 +153,12 @@ const props = defineProps({
 });
 
 const showSuccess = ref(false);
+const showError = ref(false);
+const errorMessage = ref('');
 const codeDigits = ref(Array(6).fill(''));
 const codeInputs = ref([]);
+const downloadStarted = ref(false);
+const showTroubleshooting = ref(false);
 
 const form = useForm({
     code: '',
@@ -210,24 +242,62 @@ const handlePaste = (event) => {
     }
 };
 
-const submit = () => {
+const resetForm = () => {
+    codeDigits.value = Array(6).fill('');
+    if (codeInputs.value[0]) {
+        codeInputs.value[0].focus();
+    }
+    downloadStarted.value = false;
+    showSuccess.value = false;
+    showError.value = false;
+    showTroubleshooting.value = false;
+};
+
+const submit = async () => {
     form.code = codeDigits.value.join('');
     
-    form.post(route('codes.redeem'), {
-        preserveScroll: true,
-        onSuccess: () => {
-            showSuccess.value = true;
+    try {
+        // First, validate the code
+        const response = await fetch(route('codes.redeem') + '?validate=true&code=' + form.code);
+        const data = await response.json();
+
+        if (!response.ok || data.errors) {
+            showError.value = true;
+            errorMessage.value = data.errors?.code || 'An error occurred while processing your request.';
+            showSuccess.value = false;
+            resetForm();
             setTimeout(() => {
-                showSuccess.value = false;
+                showError.value = false;
             }, 5000);
-        },
-        onError: () => {
-            codeDigits.value = Array(6).fill('');
-            if (codeInputs.value[0]) {
-                codeInputs.value[0].focus();
-            }
-        },
-    });
+            return;
+        }
+
+        // If validation passed, trigger download in a new window/tab
+        const downloadUrl = route('codes.redeem') + '?code=' + form.code;
+        const downloadFrame = document.createElement('iframe');
+        downloadFrame.style.display = 'none';
+        document.body.appendChild(downloadFrame);
+        downloadFrame.src = downloadUrl;
+
+        // Show success state
+        showSuccess.value = true;
+        showError.value = false;
+        downloadStarted.value = true;
+
+        // Clean up the iframe after a delay
+        setTimeout(() => {
+            document.body.removeChild(downloadFrame);
+        }, 5000);
+
+    } catch (error) {
+        showError.value = true;
+        errorMessage.value = 'An error occurred while processing your request.';
+        showSuccess.value = false;
+        resetForm();
+        setTimeout(() => {
+            showError.value = false;
+        }, 5000);
+    }
 };
 </script>
 
@@ -255,4 +325,7 @@ input::-webkit-inner-spin-button {
 input[type=number] {
     -moz-appearance: textfield;
 }
-</style> 
+</style>
+
+<!-- Add hidden iframe for download -->
+<iframe name="download_frame" class="hidden"></iframe> 
