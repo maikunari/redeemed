@@ -1,18 +1,21 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link } from '@inertiajs/vue3';
+import AppFooter from '@/Components/AppFooter.vue';
 
 const showingNavigationDropdown = ref(false);
+
+const version = computed(() => usePage().props.version);
 </script>
 
 <template>
     <div>
-        <div class="min-h-screen bg-gray-100">
+        <div class="min-h-screen bg-gray-100 flex flex-col">
             <nav
                 class="border-b border-gray-100 bg-white"
             >
@@ -196,15 +199,18 @@ const showingNavigationDropdown = ref(false);
                 class="bg-white shadow"
                 v-if="$slots.header"
             >
-                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                     <slot name="header" />
                 </div>
             </header>
 
             <!-- Page Content -->
-            <main>
+            <main class="flex-grow">
                 <slot />
             </main>
+
+            <!-- Version Footer -->
+            <AppFooter :version="version" v-if="$page.props.version" />
         </div>
     </div>
 </template>
