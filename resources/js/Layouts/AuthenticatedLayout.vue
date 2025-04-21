@@ -209,8 +209,7 @@ const version = computed(() => usePage().props.version);
                 <slot />
             </main>
 
-            <!-- Version Footer -->
-            <AppFooter :version="version" v-if="$page.props.version" />
+            <AppFooter :version="version" />
         </div>
     </div>
 </template>
