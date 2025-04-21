@@ -58,7 +58,14 @@
                         <!-- Files List -->
                         <div class="mt-8">
                             <h3 class="text-lg font-medium text-gray-900">Uploaded Files</h3>
-                            <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            <div v-if="!files.length" class="mt-4 text-center py-12 bg-gray-50 rounded-lg">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">No files uploaded</h3>
+                                <p class="mt-1 text-sm text-gray-500">Get started by uploading your first file above.</p>
+                            </div>
+                            <div v-else class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                                 <div v-for="file in files" :key="file.id" class="relative bg-white border rounded-lg shadow-sm">
                                     <div class="p-4">
                                         <div class="aspect-w-1 aspect-h-1 mb-4 relative w-full h-[180px] group">
@@ -173,6 +180,30 @@
         @close="closeGenerateModal"
         @generated="handleCodeGenerated"
     />
+
+    <!-- Delete Confirmation Modal -->
+    <Modal :show="showDeleteModal" @close="closeDeleteModal" maxWidth="sm">
+        <div class="p-6">
+            <h2 class="text-lg font-medium text-gray-900">
+                Delete File
+            </h2>
+            <p class="mt-2 text-sm text-gray-600">
+                Are you sure you want to delete this file? This action cannot be undone.
+            </p>
+            <div class="mt-6 flex justify-end space-x-3">
+                <SecondaryButton @click="closeDeleteModal">
+                    Cancel
+                </SecondaryButton>
+                <DangerButton
+                    :class="{ 'opacity-25': deleting }"
+                    :disabled="deleting"
+                    @click="confirmDelete"
+                >
+                    Delete File
+                </DangerButton>
+            </div>
+        </div>
+    </Modal>
 </template>
 
 <script setup>
@@ -181,6 +212,9 @@ import { Head, useForm, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import FileUploader from '@/Components/FileUploader.vue';
 import GenerateCodeModal from '@/Components/GenerateCodeModal.vue';
+import Modal from '@/Components/Modal.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
+import DangerButton from '@/Components/DangerButton.vue';
 
 const props = defineProps({
     files: {
@@ -199,6 +233,9 @@ const editTitle = ref('');
 const showGenerateModal = ref(false);
 const selectedFileId = ref(null);
 const uploadProgress = ref(0);
+const showDeleteModal = ref(false);
+const fileToDelete = ref(null);
+const deleting = ref(false);
 const form = useForm({
     title: '',
     file: null,
@@ -279,15 +316,32 @@ const uploadFile = async () => {
     }
 };
 
-const deleteFile = async (fileId) => {
-    if (!confirm('Are you sure you want to delete this file?')) return;
+const deleteFile = (fileId) => {
+    fileToDelete.value = fileId;
+    showDeleteModal.value = true;
+};
 
-    try {
-        await axios.delete(route('files.destroy', fileId));
-        window.location.href = route('files.index');
-    } catch (error) {
-        alert('An error occurred while deleting the file');
-    }
+const closeDeleteModal = () => {
+    showDeleteModal.value = false;
+    fileToDelete.value = null;
+};
+
+const confirmDelete = () => {
+    if (!fileToDelete.value) return;
+    
+    deleting.value = true;
+    router.delete(route('files.destroy', fileToDelete.value), {
+        preserveScroll: true,
+        onSuccess: () => {
+            closeDeleteModal();
+        },
+        onError: () => {
+            // Error will be shown via Inertia's default error handling
+        },
+        onFinish: () => {
+            deleting.value = false;
+        }
+    });
 };
 
 const startEdit = (file) => {
