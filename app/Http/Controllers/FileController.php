@@ -40,34 +40,41 @@ class FileController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'file' => 'required|file|max:20480', // 20MB max
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max for thumbnails
-        ]);
-
-        $file = $request->file('file');
-        
-        // Validate file type
-        if (!$this->isValidFileType($file)) {
-            throw ValidationException::withMessages([
-                'file' => 'Invalid file type. Only MP3 and ZIP files are allowed.',
+        try {
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'file' => 'required|file|max:20480', // 20MB max
+                'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max for thumbnails
             ]);
+
+            $file = $request->file('file');
+            
+            // Validate file type
+            if (!$this->isValidFileType($file)) {
+                return back()->with('error', 'Invalid file type. Only MP3 and ZIP files are allowed.');
+            }
+
+            $fileModel = File::create(['title' => $request->title]);
+
+            // Store main file
+            $fileModel->addMedia($file)
+                     ->toMediaCollection('files');
+
+            // Handle thumbnail if provided
+            if ($request->hasFile('thumbnail')) {
+                $fileModel->addMedia($request->file('thumbnail'))
+                         ->toMediaCollection('thumbnails');
+            }
+
+            return redirect()->route('files.index')->with('success', 'File uploaded successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors());
+        } catch (\Exception $e) {
+            if (str_contains($e->getMessage(), 'exceeds the limit')) {
+                return back()->with('error', 'The file is too large. Maximum allowed size is 20MB.');
+            }
+            return back()->with('error', 'An error occurred while uploading the file. Please try again.');
         }
-
-        $fileModel = File::create(['title' => $request->title]);
-
-        // Store main file
-        $fileModel->addMedia($file)
-                 ->toMediaCollection('files');
-
-        // Handle thumbnail if provided
-        if ($request->hasFile('thumbnail')) {
-            $fileModel->addMedia($request->file('thumbnail'))
-                     ->toMediaCollection('thumbnails');
-        }
-
-        return redirect()->route('files.index')->with('success', 'File uploaded successfully.');
     }
 
     public function destroy(File $file)

@@ -8,6 +8,17 @@
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <!-- Error Messages -->
+                <div v-if="form.errors.file" class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">{{ form.errors.file }}</span>
+                    <button @click="clearError" class="absolute top-0 bottom-0 right-0 px-4 py-3">
+                        <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <title>Close</title>
+                            <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+                        </svg>
+                    </button>
+                </div>
+
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
                         <FileUploader
@@ -16,6 +27,7 @@
                             @fileRemoved="handleFileRemoved"
                             @thumbnailSelected="handleThumbnailSelected"
                             @thumbnailRemoved="handleThumbnailRemoved"
+                            @error="handleUploadError"
                         />
 
                         <form v-if="selectedFile" @submit.prevent="uploadFile" class="mt-4">
@@ -25,7 +37,7 @@
                                     type="text"
                                     id="title"
                                     v-model="title"
-                                    :placeholder="selectedFile?.name || 'Enter title'"
+                                    :placeholder="selectedFile?.name"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                     required
                                 >
@@ -153,7 +165,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import FileUploader from '@/Components/FileUploader.vue';
 import GenerateCodeModal from '@/Components/GenerateCodeModal.vue';
@@ -174,14 +186,23 @@ const editingFile = ref(null);
 const editTitle = ref('');
 const showGenerateModal = ref(false);
 const selectedFileId = ref(null);
+const uploadProgress = ref(0);
+const form = useForm({
+    title: '',
+    file: null,
+    thumbnail: null,
+});
 
 const handleFileSelected = (file) => {
     selectedFile.value = file;
+    // Don't automatically set the title, let the user type it
+    // The filename will show as placeholder
 };
 
 const handleFileRemoved = () => {
     selectedFile.value = null;
     title.value = '';
+    form.clearErrors();
 };
 
 const handleThumbnailSelected = (file) => {
@@ -192,38 +213,57 @@ const handleThumbnailRemoved = () => {
     selectedThumbnail.value = null;
 };
 
+const handleUploadError = (message) => {
+    if (!form.errors) {
+        form.errors = {};
+    }
+    form.errors.file = message;
+};
+
 const uploadFile = async () => {
     if (!selectedFile.value) return;
 
-    const formData = new FormData();
-    formData.append('title', title.value);
-    formData.append('file', selectedFile.value);
-    if (selectedThumbnail.value) {
-        formData.append('thumbnail', selectedThumbnail.value);
-    }
-
     uploading.value = true;
-    fileUploader.value.setUploading(true);
+    fileUploader.value?.setUploading(true);
 
     try {
-        const response = await axios.post(route('files.store'), formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-            onUploadProgress: (progressEvent) => {
-                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                fileUploader.value.setProgress(percentCompleted);
-            },
-        });
+        form.clearErrors();
+        form.title = title.value;
+        form.file = selectedFile.value;
+        form.thumbnail = selectedThumbnail.value;
 
-        // Redirect to refresh the page with new data
-        window.location.href = route('files.index');
+        await form.post(route('files.store'), {
+            preserveScroll: true,
+            onProgress: (progress) => {
+                const percentCompleted = Math.round((progress.loaded * 100) / progress.total);
+                fileUploader.value?.setProgress(percentCompleted);
+                uploadProgress.value = percentCompleted;
+            },
+            onError: (errors) => {
+                // Handle Laravel validation errors
+                if (errors.file) {
+                    handleUploadError(errors.file);
+                } else if (errors.message) {
+                    handleUploadError(errors.message);
+                } else {
+                    handleUploadError('An error occurred during file upload');
+                }
+            },
+            onSuccess: () => {
+                selectedFile.value = null;
+                selectedThumbnail.value = null;
+                title.value = '';
+                uploadProgress.value = 0;
+                fileUploader.value?.reset();
+            },
+            onFinish: () => {
+                uploading.value = false;
+                fileUploader.value?.setUploading(false);
+                fileUploader.value?.setProgress(0);
+            }
+        });
     } catch (error) {
-        alert(error.response?.data?.message || 'An error occurred while uploading the file');
-    } finally {
-        uploading.value = false;
-        fileUploader.value.setUploading(false);
-        fileUploader.value.setProgress(0);
+        handleUploadError(error.message || 'An error occurred during file upload');
     }
 };
 
@@ -292,5 +332,9 @@ const replaceThumbnail = async (event, fileId) => {
     } catch (error) {
         alert(error.response?.data?.message || 'An error occurred while updating the thumbnail');
     }
+};
+
+const clearError = () => {
+    form.clearErrors();
 };
 </script> 

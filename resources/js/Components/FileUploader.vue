@@ -103,9 +103,9 @@
 </template>
 
 <script setup>
-import { ref, defineEmits } from 'vue';
+import { ref } from 'vue';
 
-const emit = defineEmits(['fileSelected', 'fileRemoved', 'uploadProgress', 'thumbnailSelected', 'thumbnailRemoved']);
+const emit = defineEmits(['fileSelected', 'fileRemoved', 'uploadProgress', 'thumbnailSelected', 'thumbnailRemoved', 'error']);
 
 const isDragging = ref(false);
 const selectedFile = ref(null);
@@ -145,16 +145,22 @@ const handleThumbnailSelect = (e) => {
 };
 
 const isValidFile = (file) => {
+    if (!file) return false;
+    
     const validTypes = ['.mp3', '.zip'];
     const extension = '.' + file.name.split('.').pop().toLowerCase();
+    
     if (!validTypes.includes(extension)) {
-        alert('Please select an MP3 or ZIP file');
+        emit('error', `Invalid file type. Please select an MP3 or ZIP file. You uploaded a ${extension} file.`);
         return false;
     }
-    if (file.size > 20 * 1024 * 1024) { // 20MB
-        alert('File size must be less than 20MB');
+    
+    const maxSize = 20 * 1024 * 1024; // 20MB
+    if (file.size > maxSize) {
+        emit('error', `File size must be less than 20MB. Your file is ${formatFileSize(file.size)}.`);
         return false;
     }
+    
     return true;
 };
 
@@ -178,12 +184,21 @@ const formatFileSize = (bytes) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
+const reset = () => {
+    selectedFile.value = null;
+    thumbnailPreview.value = null;
+    uploading.value = false;
+    uploadProgress.value = 0;
+};
+
 defineExpose({
     setUploading(value) {
         uploading.value = value;
     },
     setProgress(value) {
         uploadProgress.value = value;
-    }
+        emit('uploadProgress', { loaded: value, total: 100 });
+    },
+    reset
 });
 </script> 
