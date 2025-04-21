@@ -46,7 +46,7 @@ const version = computed(() => usePage().props.version);
                                     :href="route('files.index')"
                                     :active="route().current('files.index')"
                                 >
-                                    Files
+                                    Manage Files
                                 </NavLink>
                                 <NavLink
                                     :href="route('codes.index')"

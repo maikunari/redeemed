@@ -1,9 +1,9 @@
 <template>
-    <Head title="Files" />
+    <Head title="Manage Files" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Files</h2>
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Manage Files</h2>
         </template>
 
         <div class="py-12">
