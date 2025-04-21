@@ -56,7 +56,7 @@
                         <!-- Files List -->
                         <div class="mt-8">
                             <h3 class="text-lg font-medium text-gray-900">Uploaded Files</h3>
-                            <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                                 <div v-for="file in files" :key="file.id" class="relative bg-white border rounded-lg shadow-sm">
                                     <div class="p-4">
                                         <div class="aspect-w-1 aspect-h-1 mb-4 relative w-full h-[180px] group">
@@ -94,7 +94,7 @@
                                             </div>
                                         </div>
                                         <div class="flex items-center justify-between">
-                                            <div v-if="editingFile === file.id">
+                                            <div v-if="editingFile === file.id" class="flex items-center gap-2">
                                                 <input
                                                     type="text"
                                                     v-model="editTitle"
@@ -102,6 +102,24 @@
                                                     @keyup.enter="updateFileTitle(file.id)"
                                                     @keyup.esc="cancelEdit"
                                                 >
+                                                <button 
+                                                    @click="updateFileTitle(file.id)"
+                                                    class="text-green-600 hover:text-green-700"
+                                                    title="Save"
+                                                >
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </button>
+                                                <button 
+                                                    @click="cancelEdit"
+                                                    class="text-gray-400 hover:text-gray-500"
+                                                    title="Cancel"
+                                                >
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
                                             </div>
                                             <h4 v-else class="text-lg font-medium text-gray-900" @dblclick="startEdit(file)">
                                                 {{ file.title }}
@@ -123,27 +141,19 @@
                                             <p>Uploaded: {{ file.created_at }}</p>
                                             <p>Downloads: {{ file.download_count }}</p>
                                         </div>
-                                        <div class="mt-4 flex justify-between">
+                                        <div class="mt-4 -mx-4 -mb-4 flex divide-x border-t">
                                             <a
-                                                :href="route('files.download', file.id)"
-                                                class="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                                                :href="route('codes.index', file.id)"
+                                                class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-emerald-50 hover:bg-emerald-100 transition-colors text-sm font-medium text-emerald-600 hover:text-emerald-700 whitespace-nowrap"
                                             >
-                                                Download
+                                                Manage Codes
                                             </a>
-                                            <div class="flex space-x-3">
-                                                <a
-                                                    :href="route('codes.index', file.id)"
-                                                    class="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-                                                >
-                                                    Manage Codes
-                                                </a>
-                                                <button
-                                                    @click="deleteFile(file.id)"
-                                                    class="text-sm font-medium text-red-600 hover:text-red-500"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </div>
+                                            <button
+                                                @click="deleteFile(file.id)"
+                                                class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-red-50 hover:bg-red-100 transition-colors text-sm font-medium text-red-600 hover:text-red-700"
+                                            >
+                                                Delete
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -289,15 +299,28 @@ const cancelEdit = () => {
 };
 
 const updateFileTitle = async (fileId) => {
-    try {
-        await axios.patch(route('files.update', fileId), {
-            title: editTitle.value
-        });
-        window.location.href = route('files.index');
-    } catch (error) {
-        alert('An error occurred while updating the file title');
+    if (!editTitle.value.trim()) {
+        return;
     }
-    cancelEdit();
+
+    try {
+        await router.patch(route('files.update', fileId), {
+            title: editTitle.value.trim()
+        }, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                editingFile.value = null;
+                editTitle.value = '';
+            },
+            onError: (errors) => {
+                const message = errors.title || 'Failed to update title';
+                form.setError('title', message);
+            }
+        });
+    } catch (error) {
+        form.setError('title', 'Failed to update title');
+    }
 };
 
 const openGenerateCode = (file) => {
