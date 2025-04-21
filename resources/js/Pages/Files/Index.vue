@@ -21,6 +21,8 @@
 
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
+                        <p class="mb-4 text-sm text-gray-600">Upload your MP3 or ZIP file (max 20MB) and add a custom thumbnail to make it easily identifiable.</p>
+                        
                         <FileUploader
                             ref="fileUploader"
                             @fileSelected="handleFileSelected"
@@ -136,7 +138,7 @@
                                             </button>
                                         </div>
                                         <div class="mt-2 text-sm text-gray-500">
-                                            <p>{{ file.filename }}</p>
+                                            <p><span class="text-gray-700">File Name:</span> {{ file.filename }}</p>
                                             <p>Size: {{ file.size }}</p>
                                             <p>Uploaded: {{ file.created_at }}</p>
                                             <p>Downloads: {{ file.download_count }}</p>
@@ -144,13 +146,13 @@
                                         <div class="mt-4 -mx-4 -mb-4 flex divide-x border-t">
                                             <a
                                                 :href="route('codes.index', file.id)"
-                                                class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-emerald-50 hover:bg-emerald-100 transition-colors text-sm font-medium text-emerald-600 hover:text-emerald-700 whitespace-nowrap"
+                                                class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-green-50 hover:bg-green-100 transition-colors text-sm font-medium text-green-700 hover:text-green-800 whitespace-nowrap"
                                             >
                                                 Manage Codes
                                             </a>
                                             <button
                                                 @click="deleteFile(file.id)"
-                                                class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-red-50 hover:bg-red-100 transition-colors text-sm font-medium text-red-600 hover:text-red-700"
+                                                class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-rose-50 hover:bg-rose-100 transition-colors text-sm font-medium text-rose-700 hover:text-rose-800"
                                             >
                                                 Delete
                                             </button>
