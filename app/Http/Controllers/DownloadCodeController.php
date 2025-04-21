@@ -136,7 +136,7 @@ class DownloadCodeController extends Controller
         
         return response($csv->toString(), 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"{$safeTitle} ({$file->codes->count()}).csv\"",
+            'Content-Disposition' => sprintf('attachment; filename="%s (%d).csv"', $safeTitle, $file->codes->count()),
         ]);
     }
 
