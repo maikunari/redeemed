@@ -82,6 +82,6 @@ class File extends Model implements HasMedia
 
     public function getFormattedCreatedAtAttribute()
     {
-        return $this->created_at->format('M j, Y g:i A');
+        return $this->created_at ? $this->created_at->format('M j, Y g:i A') : null;
     }
 }
