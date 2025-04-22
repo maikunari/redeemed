@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+/* Your modal-specific CSS here */
+.sm\:max-w-sm {
+    width: 100%;
+}
