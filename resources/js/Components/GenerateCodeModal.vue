@@ -1,5 +1,5 @@
 <template>
-    <Modal :show="show" @close="closeModal">
+    <Modal :show="show" @close="closeModal" maxWidth="sm">
         <div class="p-6">
             <h2 class="text-lg font-medium text-gray-900 mb-4">
                 Generate Download Code
