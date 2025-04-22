@@ -1,5 +1,6 @@
 <script setup>
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
+import AppFooter from '@/Components/AppFooter.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
@@ -7,12 +8,9 @@ const version = computed(() => usePage().props.version);
 </script>
 
 <template>
-    <div class="min-h-screen relative">
+    <div class="min-h-screen flex flex-col bg-[#000000]">
         <slot />
-        <div class="absolute bottom-4 right-4 text-gray-400 flex flex-col items-end">
-            <div class="text-3xl font-black tracking-tight font-['Roboto'] italic drop-shadow-sm">redeem</div>
-            <a href="https://github.com/maikunari/redeemed" target="_blank" rel="noopener noreferrer" class="text-sm hover:text-gray-600 transition-colors">v{{ version }}</a>
-        </div>
+        <AppFooter :version="version" />
     </div>
 </template>
 

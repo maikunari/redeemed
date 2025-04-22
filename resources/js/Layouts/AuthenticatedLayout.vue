@@ -209,7 +209,11 @@ const version = computed(() => usePage().props.version);
                 <slot />
             </main>
 
-            <AppFooter :version="version" />
+            <AppFooter :version="version" :is-authenticated="true" />
         </div>
     </div>
 </template>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@1,900&display=swap');
+</style>
