@@ -11,7 +11,7 @@ const version = computed(() => usePage().props.version);
         <slot />
         <div class="absolute bottom-4 right-4 text-gray-400 flex flex-col items-end">
             <div class="text-3xl font-black tracking-tight font-['Roboto'] italic drop-shadow-sm">redeem</div>
-            <div class="text-sm">v{{ version }}</div>
+            <a href="https://github.com/maikunari/redeemed" target="_blank" rel="noopener noreferrer" class="text-sm hover:text-gray-600 transition-colors">v{{ version }}</a>
         </div>
     </div>
 </template>
