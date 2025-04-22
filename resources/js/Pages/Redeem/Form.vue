@@ -48,25 +48,46 @@
                     <!-- Success state -->
                     <div v-if="downloadStarted" class="space-y-6">
                         <div class="p-6 bg-green-50 rounded-lg text-center">
-                            <svg class="mx-auto h-12 w-12 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <h3 class="mt-4 text-lg font-medium text-green-800">Thank you!</h3>
-                            <p class="mt-2 text-sm text-green-600">
-                                Your download should begin automatically.
-                            </p>
+                            <template v-if="downloadProgress < 100">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-16 h-16 relative">
+                                        <svg class="animate-spin w-16 h-16 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <span class="text-sm font-medium text-indigo-600">{{ downloadProgress }}%</span>
+                                        </div>
+                                    </div>
+                                    <p class="mt-3 text-sm text-gray-600">Downloading your file...</p>
+                                </div>
+                            </template>
+                            <template v-else>
+                                <svg class="mx-auto h-12 w-12 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <h3 class="mt-4 text-lg font-medium text-green-800">Thank you!</h3>
+                                <p class="mt-2 text-sm text-green-600">
+                                    Your download has completed successfully.
+                                </p>
+                            </template>
+                            
                             <button 
-                                v-if="!showTroubleshooting"
+                                v-if="!showTroubleshooting && downloadProgress === 100"
                                 @click="showTroubleshooting = true"
                                 class="mt-4 text-sm text-indigo-600 hover:text-indigo-800 underline"
                             >
-                                Click here if your download doesn't start
+                                Having trouble with your download?
                             </button>
                             <div v-if="showTroubleshooting" class="mt-4 text-sm text-gray-600 space-y-2">
                                 <ul class="list-disc text-left pl-4 space-y-1">
                                     <li>Check your browser's download settings</li>
-                                    <li>Ensure pop-ups aren't blocked for this site</li>
-                                    <li>Try the <a :href="route('codes.redeem') + '?code=' + form.code" class="underline hover:text-gray-900">backup download link</a> (within 5 minutes)</li>
+                                    <li>Ensure you have enough storage space</li>
+                                    <li>
+                                        <form @submit.prevent="handleBackupDownload" class="inline">
+                                            <button type="submit" class="underline hover:text-gray-900">Try backup download method</button>
+                                        </form>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -156,8 +177,9 @@
 </template>
 
 <script setup>
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import axios from 'axios';
 
 const props = defineProps({
     code: {
@@ -181,9 +203,14 @@ const codeDigits = ref(Array(6).fill(''));
 const codeInputs = ref([]);
 const downloadStarted = ref(false);
 const showTroubleshooting = ref(false);
+const downloadProgress = ref(0);
+const isLoading = ref(false);
+const error = ref(null);
+const downloadUrl = ref(null);
 
 const form = useForm({
     code: '',
+    validate: false
 });
 
 const isCodeComplete = computed(() => {
@@ -393,51 +420,86 @@ const resetForm = () => {
     showTroubleshooting.value = false;
 };
 
-const submit = async () => {
+const submit = () => {
+    // Reset states
+    downloadStarted.value = true;
+    downloadProgress.value = 0;
     form.code = codeDigits.value.join('');
     
-    try {
-        // First, validate the code
-        const response = await fetch(route('codes.redeem') + '?validate=true&code=' + form.code);
-        const data = await response.json();
+    // First validate
+    form.validate = true;
+    form.post(route('codes.redeem'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            // If validation succeeds, trigger download
+            form.validate = false;
+            
+            // Use axios for the download request to handle the stream
+            axios.post(route('codes.redeem'), 
+                { code: form.code },
+                { 
+                    responseType: 'blob',
+                    headers: {
+                        'X-XSRF-TOKEN': usePage().props.csrf_token,
+                    }
+                }
+            ).then(response => {
+                // Get filename from the Content-Disposition header
+                const contentDisposition = response.headers['content-disposition'];
+                const filename = contentDisposition
+                    ? contentDisposition.split('filename=')[1].replace(/["']/g, '')
+                    : 'download';
 
-        if (!response.ok || data.errors) {
-            showError.value = true;
-            errorMessage.value = data.errors?.code || 'An error occurred while processing your request.';
-            showSuccess.value = false;
-            resetForm();
-            setTimeout(() => {
-                showError.value = false;
-            }, 5000);
-            return;
+                // Create a blob URL and trigger download
+                const blob = new Blob([response.data], { type: response.headers['content-type'] });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                
+                // Cleanup
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(link);
+                downloadProgress.value = 100;
+            }).catch(error => {
+                form.setError('code', error.response?.data?.message || 'Download failed');
+                downloadStarted.value = false;
+            });
+        },
+        onError: (errors) => {
+            form.setError('code', errors.message || 'Invalid code');
+            downloadStarted.value = false;
         }
+    });
+};
 
-        // If validation passed, trigger download in a new window/tab
-        const downloadUrl = route('codes.redeem') + '?code=' + form.code;
-        const downloadFrame = document.createElement('iframe');
-        downloadFrame.style.display = 'none';
-        document.body.appendChild(downloadFrame);
-        downloadFrame.src = downloadUrl;
-
-        // Show success state
-        showSuccess.value = true;
-        showError.value = false;
-        downloadStarted.value = true;
-
-        // Clean up the iframe after a delay
+const handleBackupDownload = () => {
+    form.validate = false;
+    
+    // Use axios for the backup download request
+    axios.post(route('codes.redeem'),
+        { code: form.code },
+        { 
+            responseType: 'blob',
+            headers: {
+                'X-XSRF-TOKEN': usePage().props.csrf_token,
+            }
+        }
+    ).then(response => {
+        // Create a blob URL and open in new tab
+        const blob = new Blob([response.data], { type: response.headers['content-type'] });
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        
+        // Cleanup
         setTimeout(() => {
-            document.body.removeChild(downloadFrame);
-        }, 5000);
-
-    } catch (error) {
-        showError.value = true;
-        errorMessage.value = 'An error occurred while processing your request.';
-        showSuccess.value = false;
-        resetForm();
-        setTimeout(() => {
-            showError.value = false;
-        }, 5000);
-    }
+            window.URL.revokeObjectURL(url);
+        }, 1000);
+    }).catch(error => {
+        error.value = 'Failed to initiate backup download';
+    });
 };
 </script>
 
