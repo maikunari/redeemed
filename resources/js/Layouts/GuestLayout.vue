@@ -10,7 +10,7 @@ const version = computed(() => usePage().props.version);
 <template>
     <div class="min-h-screen flex flex-col bg-[#000000]">
         <slot />
-        <AppFooter :version="version" />
+        <AppFooter :version="version" :isAuthenticated="false" />
     </div>
 </template>
 
