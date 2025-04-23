@@ -33,18 +33,18 @@
             <div class="relative z-10 flex-1 flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
                 <div class="w-full max-w-md">
                     <!-- Form Card -->
-                    <div class="bg-white rounded-xl shadow-xl p-6 sm:p-8 space-y-6 sm:space-y-8">
+                    <div class="bg-white rounded-xl shadow-xl p-6 sm:p-12 space-y-6 sm:space-y-8">
                         <div class="text-center">
-                            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">
-                                Enter Your Download Code
+                            <h2 class="text-[1.7rem] font-bold text-gray-900">
+                                {{ showContactForm ? 'Contact Support' : 'Enter Your Download Code' }}
                             </h2>
                             <p class="mt-2 text-sm text-gray-600">
-                                Type or paste your code below
+                                {{ showContactForm ? 'Fill out the form below and we\'ll get back to you soon' : 'Type or paste your code below' }}
                             </p>
                         </div>
 
                         <!-- Success state -->
-                        <div v-if="downloadStarted" class="space-y-6">
+                        <div v-if="downloadStarted && !showContactForm" class="space-y-6">
                             <div class="p-6 bg-green-50 rounded-lg text-center">
                                 <template v-if="downloadProgress < 100">
                                     <div class="flex flex-col items-center">
@@ -107,65 +107,77 @@
                             </div>
                         </div>
 
-                        <!-- Code input form -->
-                        <form v-else @submit.prevent="submit" class="space-y-8">
-                            <div>
-                                <label class="sr-only">Download Code</label>
-                                <div class="flex justify-center gap-1.5 sm:gap-3 items-center">
-                                    <div class="flex gap-1.5 sm:gap-3">
-                                        <template v-for="index in 6" :key="`digit-${index}`">
-                                            <input
-                                                type="text"
-                                                inputmode="numeric"
-                                                maxlength="1"
-                                                pattern="[2-9]"
-                                                v-model="codeDigits[index - 1]"
-                                                :ref="el => { if (el) codeInputs[index - 1] = el }"
-                                                @input="handleInput(index - 1)"
-                                                @keydown="handleKeydown($event, index - 1)"
-                                                @paste="handlePaste"
-                                                class="w-[2.75rem] h-[2.75rem] sm:w-12 sm:h-14 text-center text-lg sm:text-2xl font-semibold border-2 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                                :class="{
-                                                    'border-red-300 text-red-900': form.errors.code,
-                                                    'border-gray-300': !form.errors.code
-                                                }"
-                                                :disabled="form.processing"
-                                            >
-                                        </template>
+                        <!-- Code input form and Contact Form -->
+                        <div class="relative">
+                            <div v-show="!showContactForm">
+                                <form v-if="!downloadStarted" @submit.prevent="submit" class="space-y-8">
+                                    <div>
+                                        <label class="sr-only">Download Code</label>
+                                        <div class="flex justify-center gap-1.5 sm:gap-3 items-center">
+                                            <div class="flex gap-1.5 sm:gap-3">
+                                                <template v-for="index in 6" :key="`digit-${index}`">
+                                                    <input
+                                                        type="text"
+                                                        inputmode="numeric"
+                                                        maxlength="1"
+                                                        pattern="[2-9]"
+                                                        v-model="codeDigits[index - 1]"
+                                                        :ref="el => { if (el) codeInputs[index - 1] = el }"
+                                                        @input="handleInput(index - 1)"
+                                                        @keydown="handleKeydown($event, index - 1)"
+                                                        @paste="handlePaste"
+                                                        class="w-[2.75rem] h-[2.75rem] sm:w-12 sm:h-14 text-center text-lg sm:text-2xl font-semibold border-2 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                        :class="{
+                                                            'border-red-300 text-red-900': form.errors.code,
+                                                            'border-gray-300': !form.errors.code
+                                                        }"
+                                                        :disabled="form.processing"
+                                                    >
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <p v-if="form.errors.code" class="mt-3 text-sm text-center text-red-600">
+                                            {{ form.errors.code }}
+                                        </p>
                                     </div>
-                                </div>
-                                <p v-if="form.errors.code" class="mt-3 text-sm text-center text-red-600">
-                                    {{ form.errors.code }}
-                                </p>
+
+                                    <div>
+                                        <button
+                                            type="submit"
+                                            :disabled="!isCodeComplete || form.processing"
+                                            class="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-base sm:text-sm font-medium text-white bg-indigo-600 transition-all duration-150"
+                                            :class="{
+                                                'opacity-75 cursor-not-allowed': !isCodeComplete || form.processing,
+                                                'hover:bg-indigo-700': isCodeComplete && !form.processing
+                                            }"
+                                        >
+                                            <svg v-if="form.processing" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            {{ form.processing ? 'Processing...' : 'Download File' }}
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
 
-                            <div>
-                                <button
-                                    type="submit"
-                                    :disabled="!isCodeComplete || form.processing"
-                                    class="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-base sm:text-sm font-medium text-white bg-indigo-600 transition-all duration-150"
-                                    :class="{
-                                        'opacity-75 cursor-not-allowed': !isCodeComplete || form.processing,
-                                        'hover:bg-indigo-700': isCodeComplete && !form.processing
-                                    }"
-                                >
-                                    <svg v-if="form.processing" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    {{ form.processing ? 'Processing...' : 'Download File' }}
-                                </button>
+                            <div v-show="showContactForm">
+                                <ContactForm @sent="showContactForm = false" />
                             </div>
-                        </form>
+                        </div>
 
                         <div class="relative mt-8">
                             <div class="absolute inset-0 flex items-center">
                                 <div class="w-full border-t border-gray-200"></div>
                             </div>
                             <div class="relative flex justify-center text-sm">
-                                <span class="px-4 bg-white text-gray-500">
-                                    Need help? Contact support
-                                </span>
+                                <button
+                                    type="button"
+                                    @click="showContactForm = !showContactForm"
+                                    class="px-4 bg-white text-gray-500 hover:text-gray-700"
+                                >
+                                    {{ showContactForm ? 'Return to Home' : 'Need help? Contact support' }}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -177,8 +189,9 @@
 
 <script setup>
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
+import ContactForm from '@/Components/ContactForm.vue';
 
 const props = defineProps({
     code: {
@@ -206,6 +219,7 @@ const downloadProgress = ref(0);
 const isLoading = ref(false);
 const error = ref(null);
 const downloadUrl = ref(null);
+const showContactForm = ref(false);
 
 const form = useForm({
     code: '',
@@ -551,6 +565,12 @@ input[type=number] {
     width: 100%;
     height: 100%;
     opacity: 0.9;
+}
+
+.transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
 }
 </style>
 
