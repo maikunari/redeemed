@@ -191,7 +191,7 @@
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
-import ContactForm from '@/Components/ContactForm.vue';
+// import ContactForm from '@/Components/ContactForm.vue';
 
 const props = defineProps({
     code: {
