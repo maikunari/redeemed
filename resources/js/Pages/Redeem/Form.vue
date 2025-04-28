@@ -190,6 +190,9 @@
 <script setup>
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
+const page = usePage();
+const siteName = computed(() => page.props.settings?.site_name || 'redeem');
+const logo     = computed(() => page.props.settings?.logo      || '');
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import ContactForm from '@/Components/ContactForm.vue';
 
@@ -517,21 +520,6 @@ const handleBackupDownload = () => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@1,900&display=swap');
-
-.animate-spin {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 /* Add subtle gradient animation */
 .bg-gradient-to-br {
     background-size: 400% 400%;

@@ -12,6 +12,8 @@ Route::get('/', function () {
     return Inertia::render('Redeem/Form');
 });
 
+
+
 Route::get('/dashboard', function () {
     $settings = app(SettingsController::class)->index();
     return Inertia::render('Dashboard', [
