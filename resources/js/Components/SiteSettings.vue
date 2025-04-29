@@ -9,7 +9,7 @@
                     </p>
                 </header>
 
-                <form @submit.prevent="submit" class="mt-6 space-y-6">
+                <form @submit.prevent="submitSite" class="mt-6 space-y-6">
                     <div>
                         <InputLabel for="site_name" value="Site Name" />
                         <TextInput
@@ -56,7 +56,7 @@
                             leave-active-class="transition ease-in-out"
                             leave-to-class="opacity-0"
                         >
-                            <p v-if="form.recentlySuccessful" class="text-sm text-gray-600">Saved.</p>
+                            <p v-if="form.recentlySuccessful && lastSaved === 'site'" class="text-sm text-gray-600">Saved.</p>
                         </Transition>
                     </div>
                 </form>
@@ -73,7 +73,7 @@
                     </p>
                 </header>
 
-                <form @submit.prevent="submit" class="mt-6 space-y-6">
+                <form @submit.prevent="submitContact" class="mt-6 space-y-6">
                     <div>
                         <InputLabel for="support_email" value="Support Email" />
                         <TextInput id="support_email" type="email" class="mt-1 block w-full" v-model="form.support_email" placeholder="Enter your email address" />
@@ -101,7 +101,7 @@
                             leave-active-class="transition ease-in-out"
                             leave-to-class="opacity-0"
                         >
-                            <p v-if="form.recentlySuccessful" class="text-sm text-gray-600">Saved.</p>
+                            <p v-if="form.recentlySuccessful && lastSaved === 'contact'" class="text-sm text-gray-600">Saved.</p>
                         </Transition>
                     </div>
                 </form>
@@ -139,6 +139,7 @@ const form = useForm({
 
 const logoInput = ref(null);
 const logoPreview = ref(null);
+const lastSaved = ref(null);
 
 const selectNewLogo = () => {
     logoInput.value.click();
@@ -156,7 +157,7 @@ const updateLogo = (e) => {
     reader.readAsDataURL(file);
 };
 
-const submit = () => {
+const submitAll = () => {
     form.post(route('settings.update'), {
         preserveScroll: true,
         onSuccess: () => {
@@ -167,4 +168,14 @@ const submit = () => {
         },
     });
 };
+
+function submitSite() {
+    lastSaved.value = 'site';
+    submitAll();
+}
+
+function submitContact() {
+    lastSaved.value = 'contact';
+    submitAll();
+}
 </script> 
