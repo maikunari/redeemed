@@ -14,7 +14,7 @@
                         @input="handleDigitInput(index - 1)"
                         @keydown="handleDigitKeydown($event, index - 1)"
                         @paste="handleDigitPaste"
-                        class="w-10 h-10 sm:w-12 sm:h-12 text-center text-lg sm:text-2xl font-semibold border-2 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        class="w-10 h-10 sm:w-12 sm:h-12 text-center text-lg sm:text-2xl font-semibold border-2 border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     />
                 </template>
             </div>

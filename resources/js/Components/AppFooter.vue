@@ -24,4 +24,5 @@ defineProps({
 </script>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@1,900&display=swap');
 </style> 
