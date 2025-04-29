@@ -39,7 +39,7 @@
                                 {{ showContactForm ? 'Contact Support' : 'Enter Your Download Code' }}
                             </h2>
                             <p class="mt-2 text-sm text-gray-600">
-                                {{ showContactForm ? 'Fill out the form below and we\'ll get back to you soon' : 'Type or paste your code below' }}
+                                {{ showContactForm ? contactSubtitle : 'Type or paste your code below' }}
                             </p>
                         </div>
 
@@ -169,7 +169,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                         <h3 class="text-lg font-medium text-gray-800">Thank you!</h3>
-                                        <p class="text-sm text-gray-600">Your message has been sent successfully.</p>
+                                        <p class="text-sm text-gray-600">{{ contactThankyou }}</p>
                                     </div>
                                 </template>
                             </div>
@@ -244,6 +244,9 @@ const isCodeComplete = computed(() => {
 });
 
 const fluidAnimation = ref(null);
+
+const contactSubtitle = computed(() => page.props.settings?.contact_subtitle || "Fill out the form below and we'll get back to you soon");
+const contactThankyou = computed(() => page.props.settings?.contact_thankyou || 'Your message has been sent successfully.');
 
 onMounted(() => {
     // Focus first input on mount
