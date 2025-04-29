@@ -37,6 +37,9 @@ class HandleInertiaRequests extends Middleware
                        ? [
                            'site_name' => app(Settings::class)->first()?->site_name,
                            'logo'      => app(Settings::class)->first()?->logo_url,
+                           'support_email' => app(Settings::class)->first()?->support_email,
+                           'contact_subtitle' => app(Settings::class)->first()?->contact_subtitle,
+                           'contact_thankyou' => app(Settings::class)->first()?->contact_thankyou,
                          ]
                        : null,
     ]);

@@ -47,6 +47,24 @@
                         <InputError class="mt-2" :message="form.errors.logo" />
                     </div>
 
+                    <div>
+                        <InputLabel for="support_email" value="Support Email" />
+                        <TextInput id="support_email" type="email" class="mt-1 block w-full" v-model="form.support_email" />
+                        <InputError class="mt-2" :message="form.errors.support_email" />
+                    </div>
+
+                    <div>
+                        <InputLabel for="contact_subtitle" value="Contact Form Subtitle" />
+                        <TextInput id="contact_subtitle" type="text" class="mt-1 block w-full" v-model="form.contact_subtitle" />
+                        <InputError class="mt-2" :message="form.errors.contact_subtitle" />
+                    </div>
+
+                    <div>
+                        <InputLabel for="contact_thankyou" value="Contact Form Thank-you Message" />
+                        <TextInput id="contact_thankyou" type="text" class="mt-1 block w-full" v-model="form.contact_thankyou" />
+                        <InputError class="mt-2" :message="form.errors.contact_thankyou" />
+                    </div>
+
                     <div class="flex items-center gap-4">
                         <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
 
@@ -87,6 +105,9 @@ const props = defineProps({
 const form = useForm({
     site_name: props.settings?.site_name || '',
     logo: null,
+    support_email: '',
+    contact_subtitle: '',
+    contact_thankyou: '',
 });
 
 const logoInput = ref(null);

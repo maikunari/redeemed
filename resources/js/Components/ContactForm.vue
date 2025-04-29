@@ -43,8 +43,8 @@
 </template>
 
 <script setup>
-import { useForm } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { useForm, usePage } from '@inertiajs/vue3';
+import { ref, watch, computed } from 'vue';
 
 const emit = defineEmits(['sent']);
 
@@ -56,6 +56,10 @@ const form = useForm({
 
 const codeDigits = ref(Array(6).fill(''));
 const codeInputs = ref([]);
+
+const page = usePage();
+const subtitle = computed(() => page.props.settings?.contact_subtitle || "Fill out the form below and we'll get back to you soon");
+const thankyou = computed(() => page.props.settings?.contact_thankyou || 'Your message has been sent successfully.');
 
 function handleDigitInput(index) {
     let digit = codeDigits.value[index];

@@ -19,6 +19,9 @@ class Settings extends Model implements HasMedia
      */
     protected $fillable = [
         'site_name',
+        'support_email',
+        'contact_subtitle',
+        'contact_thankyou',
     ];
 
     protected $appends = ['logo_url'];
