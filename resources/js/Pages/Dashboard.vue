@@ -11,6 +11,10 @@ defineProps({
             site_name: '',
             logo_url: null
         })
+    },
+    stats: {
+        type: Object,
+        default: () => ({})
     }
 });
 </script>
@@ -34,7 +38,7 @@ defineProps({
                         <SiteSettings :settings="settings" />
                     </div>
                     <div class="lg:w-1/2 w-full">
-                        <StatisticPanel />
+                        <StatisticPanel :stats="stats" />
                     </div>
                 </div>
             </div>

@@ -67,7 +67,7 @@
         <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
             <section>
                 <header>
-                    <h2 class="text-lg font-medium text-gray-900">Contact-Form Settings</h2>
+                    <h2 class="text-lg font-medium text-gray-900">Contact Form Settings</h2>
                     <p class="mt-1 text-sm text-gray-600">
                         Customize the texts and support email used in the contact form.
                     </p>
