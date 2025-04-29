@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import SiteSettings from '@/Components/SiteSettings.vue';
 import { Head } from '@inertiajs/vue3';
+import StatisticPanel from '@/Components/StatisticPanel.vue';
 
 defineProps({
     settings: {
@@ -27,8 +28,15 @@ defineProps({
         </template>
 
         <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                <SiteSettings :settings="settings" />
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="lg:w-1/2 w-full">
+                        <SiteSettings :settings="settings" />
+                    </div>
+                    <div class="lg:w-1/2 w-full">
+                        <StatisticPanel />
+                    </div>
+                </div>
             </div>
         </div>
     </AuthenticatedLayout>
