@@ -110,3 +110,31 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Author
 @maikunari 
+
+## Admin account setup
+
+Registration is disabled by default in production. To create the first admin account:
+
+1. Run migrations (if you haven't already):
+   ```bash
+   php artisan migrate --force
+   ```
+2. Register through the `/register` page **once**; the first user automatically gets `is_admin = true`.
+   After the first user exists, you can disable the register routes or leave them—subsequent sign-ups won't be admin.
+
+OR create admins via artisan:
+
+```bash
+php artisan tinker
+
+// inside tinker
+App\Models\User::create([
+    'name' => 'Admin',
+    'email' => 'admin@example.com',
+    'password' => Hash::make('secret'),
+    'email_verified_at' => now(),
+    'is_admin' => true,
+]);
+```
+
+Use the admin account to log in and manage the site. 
