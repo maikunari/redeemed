@@ -14,11 +14,18 @@ class SupportController extends Controller
             'name'    => ['required', 'string', 'max:255'],
             'email'   => ['required', 'email', 'max:255'],
             'message' => ['required', 'string'],
+            'download_code' => ['nullable','regex:/^[2-9]{6}$/'],
         ]);
 
         // Example: send email to site admin; replace as needed.
         try {
-            Mail::raw($data['message'] . "\n\nFrom: {$data['name']} <{$data['email']}>", function ($msg) {
+            $body = $data['message'];
+            if (!empty($data['download_code'])) {
+                $body .= "\n\nDownload code: " . $data['download_code'];
+            }
+            $body .= "\n\nFrom: {$data['name']} <{$data['email']}>";
+
+            Mail::raw($body, function ($msg) {
                 $msg->to(config('mail.from.address'))
                     ->subject('Support Request');
             });
