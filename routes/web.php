@@ -10,9 +10,7 @@ use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('Redeem/Form');
-});
-
-
+})->name('codes.show-form');
 
 Route::get('/dashboard', function () {
     $settings = app(SettingsController::class)->index();
