@@ -47,6 +47,33 @@
                         <InputError class="mt-2" :message="form.errors.logo" />
                     </div>
 
+                    <div class="flex items-center gap-4">
+                        <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
+
+                        <Transition
+                            enter-active-class="transition ease-in-out"
+                            enter-from-class="opacity-0"
+                            leave-active-class="transition ease-in-out"
+                            leave-to-class="opacity-0"
+                        >
+                            <p v-if="form.recentlySuccessful" class="text-sm text-gray-600">Saved.</p>
+                        </Transition>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <!-- Contact Form Settings Card -->
+        <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
+            <section>
+                <header>
+                    <h2 class="text-lg font-medium text-gray-900">Contact-Form Settings</h2>
+                    <p class="mt-1 text-sm text-gray-600">
+                        Customize the texts and support email used in the contact form.
+                    </p>
+                </header>
+
+                <form @submit.prevent="submit" class="mt-6 space-y-6">
                     <div>
                         <InputLabel for="support_email" value="Support Email" />
                         <TextInput id="support_email" type="email" class="mt-1 block w-full" v-model="form.support_email" placeholder="Enter your email address" />
