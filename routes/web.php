@@ -42,6 +42,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/codes/{code}/qr', [DownloadCodeController::class, 'generateQr'])->name('codes.qr');
 });
 
+// Public route for contact support
+Route::post('/contact', [\App\Http\Controllers\SupportController::class, 'store'])->name('support.send');
+
 // Public route for code redemption
 Route::post('/redeem', [DownloadCodeController::class, 'redeem'])->name('codes.redeem');
 
