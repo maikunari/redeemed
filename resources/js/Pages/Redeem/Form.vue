@@ -139,6 +139,14 @@
                                         <p v-if="form.errors.code" class="mt-3 text-sm text-center text-red-600">
                                             {{ form.errors.code }}
                                         </p>
+                                        <div v-if="form.errors.code" class="mt-3 flex justify-center gap-4 text-sm">
+                                            <button type="button" @click="resetForm" class="text-indigo-600 hover:text-indigo-800 underline">
+                                                Try again
+                                            </button>
+                                            <a href="/" class="text-gray-500 hover:text-gray-700 underline">
+                                                Return to Home
+                                            </a>
+                                        </div>
                                     </div>
 
                                     <div>
@@ -434,6 +442,9 @@ const resetForm = () => {
     showSuccess.value = false;
     showError.value = false;
     showTroubleshooting.value = false;
+    form.clearErrors('code');
+    form.code = '';
+    form.validate = false;
 };
 
 const submit = () => {
