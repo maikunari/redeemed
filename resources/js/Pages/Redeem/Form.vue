@@ -152,10 +152,10 @@
                                     <div>
                                         <button
                                             type="submit"
-                                            :disabled="!isCodeComplete || form.processing"
+                                            :disabled="!isCodeComplete || form.processing || form.errors.code"
                                             class="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-base sm:text-sm font-medium text-white bg-indigo-600 transition-all duration-150"
                                             :class="{
-                                                'opacity-75 cursor-not-allowed': !isCodeComplete || form.processing,
+                                                'opacity-75 cursor-not-allowed': !isCodeComplete || form.processing || form.errors.code,
                                                 'hover:bg-indigo-700': isCodeComplete && !form.processing
                                             }"
                                         >
@@ -383,6 +383,9 @@ const handleInput = (index) => {
         digit = digit.replace(/[^2-9]/g, '');
         codeDigits.value[index] = digit;
         
+        if (form.errors.code) {
+            form.clearErrors('code');
+        }
         if (digit && index < 5 && codeInputs.value[index + 1]) {
             codeInputs.value[index + 1].focus();
         }
