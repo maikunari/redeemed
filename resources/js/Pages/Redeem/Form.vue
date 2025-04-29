@@ -97,13 +97,6 @@
                                 >
                                     Enter Another Code
                                 </button>
-                                
-                                <a
-                                    href="/"
-                                    class="text-sm text-gray-600 hover:text-gray-900"
-                                >
-                                    Return to Home
-                                </a>
                             </div>
                         </div>
 
@@ -143,9 +136,6 @@
                                             <button type="button" @click="resetForm" class="text-indigo-600 hover:text-indigo-800 underline">
                                                 Try again
                                             </button>
-                                            <a href="/" class="text-gray-500 hover:text-gray-700 underline">
-                                                Return to Home
-                                            </a>
                                         </div>
                                     </div>
 
@@ -170,7 +160,18 @@
                             </div>
 
                             <div v-show="showContactForm">
-                                <ContactForm @sent="showContactForm = false" />
+                                <template v-if="!contactSubmitted">
+                                    <ContactForm @sent="handleContactSent" />
+                                </template>
+                                <template v-else>
+                                    <div class="animate-fade-in text-center space-y-4 py-6">
+                                        <svg class="mx-auto h-12 w-12 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <h3 class="text-lg font-medium text-gray-800">Thank you!</h3>
+                                        <p class="text-sm text-gray-600">Your message has been sent successfully.</p>
+                                    </div>
+                                </template>
                             </div>
                         </div>
 
@@ -231,6 +232,7 @@ const isLoading = ref(false);
 const error = ref(null);
 const downloadUrl = ref(null);
 const showContactForm = ref(false);
+const contactSubmitted = ref(false);
 
 const form = useForm({
     code: '',
@@ -531,6 +533,10 @@ const handleBackupDownload = () => {
         error.value = 'Failed to initiate backup download';
     });
 };
+
+const handleContactSent = () => {
+    contactSubmitted.value = true;
+};
 </script>
 
 <style scoped>
@@ -573,6 +579,15 @@ input[type=number] {
     transition-property: all;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 300ms;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>
 
