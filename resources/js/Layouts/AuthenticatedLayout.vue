@@ -17,17 +17,18 @@ const version = computed(() => usePage().props.version);
     <div>
         <div class="min-h-screen bg-gray-100 flex flex-col">
             <nav
-                class="border-b border-gray-100 bg-white"
+                class="border-b border-gray-800 bg-[#000000] relative overflow-hidden"
+                style="background: linear-gradient(135deg, #500080 0%, #003366 100%);"
             >
                 <!-- Primary Navigation Menu -->
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
                     <div class="flex h-16 justify-between">
                         <div class="flex">
                             <!-- Logo -->
                             <div class="flex shrink-0 items-center">
                                 <Link :href="route('dashboard')">
                                     <ApplicationLogo
-                                        class="block h-9 w-auto fill-current text-gray-800"
+                                        class="block h-9 w-auto fill-current text-white"
                                     />
                                 </Link>
                             </div>
@@ -40,19 +41,19 @@ const version = computed(() => usePage().props.version);
                                     :href="route('dashboard')"
                                     :active="route().current('dashboard')"
                                 >
-                                    Dashboard
+                                    <span class="text-white">Dashboard</span>
                                 </NavLink>
                                 <NavLink
                                     :href="route('files.index')"
                                     :active="route().current('files.index')"
                                 >
-                                    Manage Files
+                                    <span class="text-white">Manage Files</span>
                                 </NavLink>
                                 <NavLink
                                     :href="route('codes.index')"
                                     :active="route().current('codes.*')"
                                 >
-                                    Manage Codes
+                                    <span class="text-white">Manage Codes</span>
                                 </NavLink>
                             </div>
                         </div>
@@ -65,12 +66,12 @@ const version = computed(() => usePage().props.version);
                                         <span class="inline-flex rounded-md">
                                             <button
                                                 type="button"
-                                                class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
+                                                class="inline-flex items-center rounded-md border border-transparent bg-[#000000] px-3 py-2 text-sm font-medium leading-4 text-white transition duration-150 ease-in-out hover:text-gray-300 focus:outline-none"
                                             >
                                                 {{ $page.props.auth.user.name }}
 
                                                 <svg
-                                                    class="-me-0.5 ms-2 h-4 w-4"
+                                                    class="-me-0.5 ms-2 h-4 w-4 text-white"
                                                     xmlns="http://www.w3.org/2000/svg"
                                                     viewBox="0 0 20 20"
                                                     fill="currentColor"
@@ -110,7 +111,7 @@ const version = computed(() => usePage().props.version);
                                     showingNavigationDropdown =
                                         !showingNavigationDropdown
                                 "
-                                class="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
+                                class="inline-flex items-center justify-center rounded-md p-2 text-white transition duration-150 ease-in-out hover:bg-gray-800 hover:text-gray-300 focus:bg-gray-800 focus:text-gray-300 focus:outline-none"
                             >
                                 <svg
                                     class="h-6 w-6"
