@@ -70,6 +70,32 @@
                 <!-- Codes Table Card -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
+                        <!-- Tabs for Active and Expired Codes -->
+                        <div class="border-b border-gray-200 mb-4">
+                            <nav class="-mb-px flex space-x-2" aria-label="Tabs">
+                                <button
+                                    @click="activeTab = 'active'"
+                                    :class="{
+                                        'bg-white border-b-white text-indigo-600 shadow-sm': activeTab === 'active',
+                                        'bg-transparent border-b-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400': activeTab !== 'active'
+                                    }"
+                                    class="whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm rounded-t-sm border-x border-gray-200"
+                                >
+                                    Active Codes
+                                </button>
+                                <button
+                                    @click="activeTab = 'expired'"
+                                    :class="{
+                                        'bg-white border-b-white text-indigo-600 shadow-sm': activeTab === 'expired',
+                                        'bg-transparent border-b-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400': activeTab !== 'expired'
+                                    }"
+                                    class="whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm rounded-t-sm border-x border-gray-200"
+                                >
+                                    Expired Codes
+                                </button>
+                            </nav>
+                        </div>
+
                         <!-- Codes Table -->
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
@@ -96,7 +122,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="code in codes.data" :key="code.id">
+                                    <tr v-for="code in filteredCodes" :key="code.id">
                                         <td class="px-6 py-4 whitespace-nowrap font-mono">
                                             {{ code.code }}
                                         </td>
@@ -261,7 +287,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -292,6 +318,7 @@ const showManageRenewModal = ref(false);
 const codeToManage = ref(null);
 const newUsageLimit = ref(1);
 const updating = ref(false);
+const activeTab = ref('active');
 
 // Safely initialize selectedFileId from the URL query string
 try {
@@ -421,4 +448,17 @@ const confirmManageRenew = () => {
         }
     });
 };
+
+const filteredCodes = computed(() => {
+    if (activeTab.value === 'active') {
+        return props.codes.data.filter(code => {
+            return code.usage_count < code.usage_limit;
+        });
+    } else if (activeTab.value === 'expired') {
+        return props.codes.data.filter(code => {
+            return code.usage_count >= code.usage_limit || !code.expires_at;
+        });
+    }
+    return props.codes.data;
+});
 </script> 
