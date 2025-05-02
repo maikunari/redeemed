@@ -80,6 +80,22 @@ class DownloadCodeController extends Controller
     }
 
     /**
+     * Update the usage limit of a specific download code
+     */
+    public function renew(Request $request, DownloadCode $code)
+    {
+        $request->validate([
+            'usage_limit' => 'required|integer|min:1'
+        ]);
+
+        $code->update(['usage_limit' => $request->usage_limit]);
+        return redirect()->back()->with('message', 'Usage limit updated successfully.');
+    }
+
+    /**
+     * Redeem a download code
+     */
+    /**
      * Redeem a download code
      */
     public function redeem(Request $request)
@@ -87,18 +103,18 @@ class DownloadCodeController extends Controller
         $request->validate([
             'code' => ['required', 'string', 'size:6', 'regex:/^[2-9]{6}$/'],
         ]);
-
+    
         $downloadCode = $this->downloadCodeService->validateCode($request->code);
-
+    
         if (!$downloadCode) {
             throw ValidationException::withMessages([
                 'code' => 'Invalid or expired download code.',
             ]);
         }
-
-        // Record the usage
+    
+        // Record the usage for every valid redemption
         $this->downloadCodeService->recordUsage($downloadCode);
-
+    
         // Get the file and stream it to the user
         $media = $downloadCode->file->getFirstMedia('files');
         
@@ -107,7 +123,7 @@ class DownloadCodeController extends Controller
                 'code' => 'File not found.',
             ]);
         }
-
+    
         return response()->stream(
             function () use ($media) {
                 $stream = $media->stream();

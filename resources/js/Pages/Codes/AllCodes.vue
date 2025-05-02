@@ -136,6 +136,14 @@
                                                             View QR
                                                         </button>
                                                         <button
+                                                            @click="openManageRenewModal(code)"
+                                                            class="text-gray-700 block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 hover:text-gray-900"
+                                                            role="menuitem"
+                                                            tabindex="-1"
+                                                        >
+                                                            Manage / Renew
+                                                        </button>
+                                                        <button
                                                             @click="openDeleteModal(code)"
                                                             class="text-red-600 block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 hover:text-red-700"
                                                             role="menuitem"
@@ -210,6 +218,40 @@
             </div>
         </div>
     </Modal>
+
+    <!-- Manage / Renew Modal -->
+    <Modal :show="showManageRenewModal" @close="closeManageRenewModal" maxWidth="sm">
+        <div class="p-6">
+            <h2 class="text-lg font-medium text-gray-900">
+                Manage / Renew Code
+            </h2>
+            <p class="mt-2 text-sm text-gray-600">
+                Current usage for code <strong>{{ codeToManage?.code }}</strong>: {{ codeToManage?.usage_count }}/{{ codeToManage?.usage_limit }}.
+            </p>
+            <div class="mt-4">
+                <label for="newUsageLimit" class="block text-sm font-medium text-gray-700">New Usage Limit</label>
+                <input
+                    id="newUsageLimit"
+                    type="number"
+                    v-model="newUsageLimit"
+                    min="1"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                >
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <SecondaryButton @click="closeManageRenewModal">
+                    Cancel
+                </SecondaryButton>
+                <button
+                    :class="{ 'opacity-25': updating, 'inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500': true }"
+                    :disabled="updating || newUsageLimit < 1"
+                    @click="confirmManageRenew"
+                >
+                    Update Limit
+                </button>
+            </div>
+        </div>
+    </Modal>
 </template>
 
 <script setup>
@@ -240,6 +282,10 @@ const openActionMenu = ref(null);
 const showDeleteModal = ref(false);
 const codeToDelete = ref(null);
 const deleting = ref(false);
+const showManageRenewModal = ref(false);
+const codeToManage = ref(null);
+const newUsageLimit = ref(1);
+const updating = ref(false);
 
 // Safely initialize selectedFileId from the URL query string
 try {
@@ -333,6 +379,39 @@ const confirmDelete = () => {
         },
         onFinish: () => {
             deleting.value = false;
+        }
+    });
+};
+
+const openManageRenewModal = (code) => {
+    codeToManage.value = code;
+    newUsageLimit.value = code.usage_limit;
+    showManageRenewModal.value = true;
+    openActionMenu.value = null; // Close the dropdown
+};
+
+const closeManageRenewModal = () => {
+    showManageRenewModal.value = false;
+    codeToManage.value = null;
+    newUsageLimit.value = 1;
+};
+
+const confirmManageRenew = () => {
+    if (!codeToManage.value || newUsageLimit.value < 1) return;
+    
+    updating.value = true;
+    router.patch(route('codes.renew', codeToManage.value.id), {
+        usage_limit: newUsageLimit.value
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            closeManageRenewModal();
+        },
+        onError: () => {
+            // Error will be shown via Inertia's default error handling
+        },
+        onFinish: () => {
+            updating.value = false;
         }
     });
 };
