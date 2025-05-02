@@ -71,25 +71,25 @@
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
                         <!-- Tabs for Active and Expired Codes -->
-                        <div class="border-b border-gray-200 mb-4">
-                            <nav class="-mb-px flex space-x-2" aria-label="Tabs">
+                        <div class="mb-4">
+                            <nav class="flex space-x-2" aria-label="Tabs">
                                 <button
                                     @click="activeTab = 'active'"
                                     :class="{
-                                        'bg-white border-b-white text-indigo-600 shadow-sm': activeTab === 'active',
-                                        'bg-transparent border-b-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400': activeTab !== 'active'
+                                        'bg-indigo-100 text-indigo-700': activeTab === 'active',
+                                        'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700': activeTab !== 'active'
                                     }"
-                                    class="whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm rounded-t-sm border-x border-gray-200"
+                                    class="py-2 px-4 rounded-md font-medium text-sm transition-colors duration-200"
                                 >
                                     Active Codes
                                 </button>
                                 <button
                                     @click="activeTab = 'expired'"
                                     :class="{
-                                        'bg-white border-b-white text-indigo-600 shadow-sm': activeTab === 'expired',
-                                        'bg-transparent border-b-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400': activeTab !== 'expired'
+                                        'bg-indigo-100 text-indigo-700': activeTab === 'expired',
+                                        'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700': activeTab !== 'expired'
                                     }"
-                                    class="whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm rounded-t-sm border-x border-gray-200"
+                                    class="py-2 px-4 rounded-md font-medium text-sm transition-colors duration-200"
                                 >
                                     Expired Codes
                                 </button>
