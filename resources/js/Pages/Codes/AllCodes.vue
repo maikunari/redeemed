@@ -209,7 +209,7 @@
                 QR Code for {{ selectedCode?.code }}
             </h2>
             <div class="flex justify-center">
-                <img v-if="selectedCode" :src="route('codes.qr', selectedCode.id)" alt="QR Code" class="w-64 h-64">
+                <img v-if="selectedCode" :src="route('codes.qr', selectedCode.id)" alt="QR Code" class="w-64 h-64" @error="console.error('Failed to load QR code image for code ID: ' + selectedCode.id + '. URL: ' + route('codes.qr', selectedCode.id))">
             </div>
             <div class="mt-6 flex justify-end">
                 <SecondaryButton @click="closeQrModal">
@@ -222,7 +222,7 @@
     <!-- Generate Codes Modal -->
     <GenerateCodeModal
         :show="showGenerateModal"
-        :file-id="selectedFileId"
+        :file-id="Number(selectedFileId)"
         @close="closeGenerateModal"
         @generated="handleCodeGenerated"
     />

@@ -42,7 +42,7 @@ class DownloadCodeService
      */
     public function generateQrCode(DownloadCode $downloadCode): string
     {
-        $url = route('codes.redeem-form', ['code' => $downloadCode->code]);
+        $url = route('codes.show-form', ['code' => $downloadCode->code]);
         return QrCode::size(300)
                     ->format('svg')
                     ->generate($url);

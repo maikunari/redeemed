@@ -53,11 +53,18 @@ class DownloadCodeController extends Controller
      */
     public function generateQr(DownloadCode $code)
     {
-        $svg = $this->downloadCodeService->generateQrCode($code);
-        
-        return Response::make($svg, 200, [
-            'Content-Type' => 'image/svg+xml',
-        ]);
+        try {
+            $svg = $this->downloadCodeService->generateQrCode($code);
+            
+            return Response::make($svg, 200, [
+                'Content-Type' => 'image/svg+xml',
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error generating QR code for code ID ' . $code->id . ': ' . $e->getMessage());
+            return Response::make('Error generating QR code', 500, [
+                'Content-Type' => 'text/plain',
+            ]);
+        }
     }
 
     /**
@@ -100,6 +107,15 @@ class DownloadCodeController extends Controller
         $request->validate([
             'code' => ['required', 'string', 'size:6', 'regex:/^[2-9]{6}$/'],
         ]);
+
+        // Add a safeguard to prevent multiple redemption attempts for the same code in a short time
+        $redeemKey = 'redeem_attempt_' . $request->code;
+        if (\Illuminate\Support\Facades\Cache::has($redeemKey)) {
+            throw ValidationException::withMessages([
+                'code' => 'Redemption attempt too frequent. Please wait a moment before trying again.',
+            ]);
+        }
+        \Illuminate\Support\Facades\Cache::put($redeemKey, true, now()->addSeconds(5));
 
         $downloadCode = $this->downloadCodeService->validateCode($request->code);
 
