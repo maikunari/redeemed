@@ -152,7 +152,7 @@
                                         </div>
                                         <div class="mt-4 -mx-4 -mb-4 flex divide-x border-t">
                                             <a
-                                                :href="route('codes.index', file.id)"
+                                                :href="route('codes.index', { file: file.id })"
                                                 class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-green-50 hover:bg-green-100 transition-colors text-sm font-medium text-green-700 hover:text-green-800 whitespace-nowrap"
                                             >
                                                 Manage Codes
