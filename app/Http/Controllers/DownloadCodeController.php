@@ -71,6 +71,15 @@ class DownloadCodeController extends Controller
     }
 
     /**
+     * Delete a specific download code
+     */
+    public function destroy(DownloadCode $code)
+    {
+        $code->delete();
+        return redirect()->back()->with('message', 'Code deleted successfully.');
+    }
+
+    /**
      * Redeem a download code
      */
     public function redeem(Request $request)

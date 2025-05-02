@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/files/{file}/codes', [DownloadCodeController::class, 'store'])->name('codes.store');
     Route::get('/files/{file}/codes/export', [DownloadCodeController::class, 'export'])->name('codes.export');
     Route::get('/codes/{code}/qr', [DownloadCodeController::class, 'generateQr'])->name('codes.qr');
+    Route::delete('/codes/{code}', [DownloadCodeController::class, 'destroy'])->name('codes.destroy');
 });
 
 // Public route for contact support

@@ -109,12 +109,44 @@
                                             {{ code.created_at }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right">
-                                            <button
-                                                @click="showQrCode(code)"
-                                                class="text-indigo-600 hover:text-indigo-900"
-                                            >
-                                                View QR
-                                            </button>
+                                            <div class="relative inline-block text-left">
+                                                <button
+                                                    @click="toggleActionsMenu(code.id)"
+                                                    class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                >
+                                                    Actions
+                                                    <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </button>
+                                                <div
+                                                    v-if="openActionMenu === code.id"
+                                                    class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
+                                                    role="menu"
+                                                    aria-orientation="vertical"
+                                                    aria-labelledby="menu-button"
+                                                    tabindex="-1"
+                                                >
+                                                    <div class="py-1" role="none">
+                                                        <button
+                                                            @click="showQrCode(code)"
+                                                            class="text-gray-700 block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 hover:text-gray-900"
+                                                            role="menuitem"
+                                                            tabindex="-1"
+                                                        >
+                                                            View QR
+                                                        </button>
+                                                        <button
+                                                            @click="openDeleteModal(code)"
+                                                            class="text-red-600 block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 hover:text-red-700"
+                                                            role="menuitem"
+                                                            tabindex="-1"
+                                                        >
+                                                            Delete Code
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -155,6 +187,30 @@
         @close="closeGenerateModal"
         @generated="handleCodeGenerated"
     />
+
+    <!-- Delete Confirmation Modal -->
+    <Modal :show="showDeleteModal" @close="closeDeleteModal" maxWidth="sm">
+        <div class="p-6">
+            <h2 class="text-lg font-medium text-gray-900">
+                Delete Code
+            </h2>
+            <p class="mt-2 text-sm text-gray-600">
+                Are you sure you want to delete the code <strong>{{ codeToDelete?.code }}</strong>? This action cannot be undone.
+            </p>
+            <div class="mt-6 flex justify-end space-x-3">
+                <SecondaryButton @click="closeDeleteModal">
+                    Cancel
+                </SecondaryButton>
+                <DangerButton
+                    :class="{ 'opacity-25': deleting }"
+                    :disabled="deleting"
+                    @click="confirmDelete"
+                >
+                    Delete Code
+                </DangerButton>
+            </div>
+        </div>
+    </Modal>
 </template>
 
 <script setup>
@@ -164,6 +220,7 @@ import { debounce } from 'lodash';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
+import DangerButton from '@/Components/DangerButton.vue';
 import Modal from '@/Components/Modal.vue';
 import GenerateCodeModal from '@/Components/GenerateCodeModal.vue';
 
@@ -180,6 +237,10 @@ const showQrModal = ref(false);
 const selectedCode = ref(null);
 const selectedFileId = ref('');
 const showGenerateModal = ref(false);
+const openActionMenu = ref(null);
+const showDeleteModal = ref(false);
+const codeToDelete = ref(null);
+const deleting = ref(false);
 
 // Safely initialize selectedFileId from the URL query string
 try {
@@ -238,5 +299,42 @@ const showQrCode = (code) => {
 const closeQrModal = () => {
     showQrModal.value = false;
     selectedCode.value = null;
+};
+
+const toggleActionsMenu = (codeId) => {
+    if (openActionMenu.value === codeId) {
+        openActionMenu.value = null;
+    } else {
+        openActionMenu.value = codeId;
+    }
+};
+
+const openDeleteModal = (code) => {
+    codeToDelete.value = code;
+    showDeleteModal.value = true;
+    openActionMenu.value = null; // Close the dropdown
+};
+
+const closeDeleteModal = () => {
+    showDeleteModal.value = false;
+    codeToDelete.value = null;
+};
+
+const confirmDelete = () => {
+    if (!codeToDelete.value) return;
+    
+    deleting.value = true;
+    router.delete(route('codes.destroy', codeToDelete.value.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            closeDeleteModal();
+        },
+        onError: () => {
+            // Error will be shown via Inertia's default error handling
+        },
+        onFinish: () => {
+            deleting.value = false;
+        }
+    });
 };
 </script> 
