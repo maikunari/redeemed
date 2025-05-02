@@ -181,6 +181,20 @@ const selectedCode = ref(null);
 const selectedFileId = ref('');
 const showGenerateModal = ref(false);
 
+// Safely initialize selectedFileId from the URL query string
+try {
+    const url = new URL(window.location.href);
+    const fileParam = url.searchParams.get('file');
+    if (fileParam && props.files && props.files.length > 0) {
+        const fileIdStr = fileParam.toString();
+        if (props.files.some(f => f && f.id && f.id.toString() === fileIdStr)) {
+            selectedFileId.value = fileIdStr;
+        }
+    }
+} catch (e) {
+    console.error('Error parsing URL for file parameter:', e);
+}
+
 const debouncedSearch = debounce(() => {
     router.get(
         route('codes.index'),
