@@ -207,12 +207,13 @@ const debouncedSearch = debounce(() => {
 }, 300);
 
 watch(selectedFileId, () => {
+    const queryParams = { search: search.value };
+    if (selectedFileId.value) {
+        queryParams.file = selectedFileId.value;
+    }
     router.get(
         route('codes.index'),
-        { 
-            search: search.value,
-            file: selectedFileId.value
-        },
+        queryParams,
         { preserveState: true, preserveScroll: true }
     );
 });
