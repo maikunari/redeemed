@@ -496,18 +496,30 @@ const submit = () => {
     }).catch(error => {
         downloadStarted.value = false;
         if (error.response && error.response.data) {
+            // Log the raw error response for debugging
+            console.error('Raw error response:', error.response);
             // Try to parse the error message from the response
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const json = JSON.parse(e.target.result);
-                    form.errors.code = json.errors?.code || 'An error occurred during redemption.';
+                    console.error('Parsed error JSON:', json);
+                    let errorMessage = json.errors?.code || json.message || 'An error occurred during redemption.';
+                    // Ensure errorMessage is a string before calling replace
+                    if (typeof errorMessage !== 'string') {
+                        errorMessage = String(errorMessage);
+                    }
+                    // Remove square brackets from the error message
+                    errorMessage = errorMessage.replace(/\[|\]/g, '');
+                    form.errors.code = errorMessage;
                 } catch (e) {
+                    console.error('Failed to parse error JSON:', e);
                     form.errors.code = 'An error occurred during redemption.';
                 }
             };
             reader.readAsText(error.response.data);
         } else {
+            console.error('No error response data:', error);
             form.errors.code = 'Failed to download file. Please try again.';
         }
     });
