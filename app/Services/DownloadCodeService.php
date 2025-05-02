@@ -56,19 +56,23 @@ class DownloadCodeService
         $downloadCode = DownloadCode::where('code', $code)->first();
 
         if (!$downloadCode) {
+            \Illuminate\Support\Facades\Log::debug('Validation failed for code: ' . $code . ' - Code not found');
             return null;
         }
 
         // Check if code has expired
         if ($downloadCode->expires_at && $downloadCode->expires_at->isPast()) {
+            \Illuminate\Support\Facades\Log::debug('Validation failed for code: ' . $code . ' - Code expired at ' . $downloadCode->expires_at->toString());
             return null;
         }
 
         // Check if usage limit has been reached
         if ($downloadCode->usage_count >= $downloadCode->usage_limit) {
+            \Illuminate\Support\Facades\Log::debug('Validation failed for code: ' . $code . ' - Usage limit reached: ' . $downloadCode->usage_count . '/' . $downloadCode->usage_limit);
             return null;
         }
 
+        \Illuminate\Support\Facades\Log::debug('Validation passed for code: ' . $code . ' - Usage: ' . $downloadCode->usage_count . '/' . $downloadCode->usage_limit);
         return $downloadCode;
     }
 

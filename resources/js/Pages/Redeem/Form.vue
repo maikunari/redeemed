@@ -461,51 +461,54 @@ const submit = () => {
     downloadProgress.value = 0;
     form.code = codeDigits.value.join('');
     
-    // First validate
-    form.validate = true;
-    form.post(route('codes.redeem'), {
-        preserveScroll: true,
-        onSuccess: () => {
-            // If validation succeeds, trigger download
-            form.validate = false;
-            
-            // Use axios for the download request to handle the stream
-            axios.post(route('codes.redeem'), 
-                { code: form.code },
-                { 
-                    responseType: 'blob',
-                    headers: {
-                        'X-XSRF-TOKEN': usePage().props.csrf_token,
-                    }
-                }
-            ).then(response => {
-                // Get filename from the Content-Disposition header
-                const contentDisposition = response.headers['content-disposition'];
-                const filename = contentDisposition
-                    ? contentDisposition.split('filename=')[1].replace(/["']/g, '')
-                    : 'download';
+    // Generate a unique request ID for this submission
+    const requestId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    
+    // Use axios for the download request directly, handling both validation and download in one request
+    axios.post(route('codes.redeem'), 
+        { code: form.code, requestId: requestId },
+        { 
+            responseType: 'blob',
+            headers: {
+                'X-XSRF-TOKEN': usePage().props.csrf_token,
+            }
+        }
+    ).then(response => {
+        // Get filename from the Content-Disposition header
+        const contentDisposition = response.headers['content-disposition'];
+        const filename = contentDisposition
+            ? contentDisposition.split('filename=')[1].replace(/["']/g, '')
+            : 'download';
 
-                // Create a blob URL and trigger download
-                const blob = new Blob([response.data], { type: response.headers['content-type'] });
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = filename;
-                document.body.appendChild(link);
-                link.click();
-                
-                // Cleanup
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(link);
-                downloadProgress.value = 100;
-            }).catch(error => {
-                form.setError('code', error.response?.data?.message || 'Download failed');
-                downloadStarted.value = false;
-            });
-        },
-        onError: (errors) => {
-            form.setError('code', errors.message || 'Invalid code');
-            downloadStarted.value = false;
+        // Create a blob URL and trigger download
+        const blob = new Blob([response.data], { type: response.headers['content-type'] });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        
+        // Cleanup
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(link);
+        downloadProgress.value = 100;
+    }).catch(error => {
+        downloadStarted.value = false;
+        if (error.response && error.response.data) {
+            // Try to parse the error message from the response
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    form.errors.code = json.errors?.code || 'An error occurred during redemption.';
+                } catch (e) {
+                    form.errors.code = 'An error occurred during redemption.';
+                }
+            };
+            reader.readAsText(error.response.data);
+        } else {
+            form.errors.code = 'Failed to download file. Please try again.';
         }
     });
 };
