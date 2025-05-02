@@ -97,7 +97,7 @@
                         </div>
 
                         <!-- Codes Table -->
-                        <div class="overflow-x-auto">
+                        <div class="overflow-x-auto" style="min-height: 400px;">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
