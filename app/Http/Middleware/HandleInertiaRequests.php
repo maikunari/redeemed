@@ -33,6 +33,8 @@ class HandleInertiaRequests extends Middleware
         return array_merge(parent::share($request), [
         'auth'     => ['user' => $request->user()],
         'version'  => config('version.version'),      // ← always present
+        'logo'      => app(Settings::class)->first()?->logo_url,
+        'siteName'  => app(Settings::class)->first()?->site_name,
         'settings' => $request->routeIs('codes.show-form')
                        ? [
                            'site_name' => app(Settings::class)->first()?->site_name,

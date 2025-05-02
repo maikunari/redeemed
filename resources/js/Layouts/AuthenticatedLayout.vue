@@ -18,11 +18,11 @@ const version = computed(() => usePage().props.version);
         <div class="min-h-screen bg-gray-100 flex flex-col">
             <nav
                 class="border-b border-gray-800 bg-[#000000] relative overflow-hidden"
-                style="background: linear-gradient(135deg, #500080 0%, #003366 100%);"
+                style="background: linear-gradient(135deg, #500080 0%, #400060 30%, #008080 100%);"
             >
                 <!-- Primary Navigation Menu -->
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-                    <div class="flex h-16 justify-between">
+                    <div class="flex h-20 justify-between">
                         <div class="flex">
                             <!-- Logo -->
                             <div class="flex shrink-0 items-center">
@@ -35,7 +35,7 @@ const version = computed(() => usePage().props.version);
 
                             <!-- Navigation Links -->
                             <div
-                                class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
+                                class="hidden space-x-8 sm:-my-px sm:ms-16 sm:flex"
                             >
                                 <NavLink
                                     :href="route('dashboard')"
@@ -66,7 +66,7 @@ const version = computed(() => usePage().props.version);
                                         <span class="inline-flex rounded-md">
                                             <button
                                                 type="button"
-                                                class="inline-flex items-center rounded-md border border-transparent bg-[#000000] px-3 py-2 text-sm font-medium leading-4 text-white transition duration-150 ease-in-out hover:text-gray-300 focus:outline-none"
+                                                class="inline-flex items-center rounded-md border border-transparent bg-black/50 px-3 py-2 text-sm font-medium leading-4 text-white transition duration-150 ease-in-out hover:text-gray-300 focus:outline-none"
                                             >
                                                 {{ $page.props.auth.user.name }}
 
