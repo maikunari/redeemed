@@ -12,11 +12,12 @@
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <!-- Control Card -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6 text-gray-900">
                         <!-- File Selection and Generate Button -->
                         <div class="flex items-center justify-between mb-6">
-                            <div class="w-1/2">
+                            <div class="w-1/2 max-w-lg">
                                 <label for="file-select" class="block text-sm font-medium text-gray-700 mb-1">Select File</label>
                                 <select
                                     id="file-select"
@@ -53,7 +54,7 @@
 
                         <!-- Search and Filters -->
                         <div class="mb-6">
-                            <div class="max-w-lg">
+                            <div class="w-1/2 max-w-lg">
                                 <input
                                     type="text"
                                     v-model="search"
@@ -63,7 +64,12 @@
                                 >
                             </div>
                         </div>
+                    </div>
+                </div>
 
+                <!-- Codes Table Card -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900">
                         <!-- Codes Table -->
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
