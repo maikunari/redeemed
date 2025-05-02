@@ -17,7 +17,7 @@ const version = computed(() => usePage().props.version);
     <div>
         <div class="min-h-screen bg-gray-100 flex flex-col">
             <nav
-                class="border-b border-gray-800 bg-[#000000] relative overflow-hidden"
+                class="border-b border-gray-800 bg-[#000000] relative"
                 style="background: linear-gradient(135deg, #500080 0%, #400060 30%, #008080 100%);"
             >
                 <!-- Primary Navigation Menu -->
@@ -60,7 +60,7 @@ const version = computed(() => usePage().props.version);
 
                         <div class="hidden sm:ms-6 sm:flex sm:items-center">
                             <!-- Settings Dropdown -->
-                            <div class="relative ms-3">
+                            <div class="relative ms-3 z-999">
                                 <Dropdown align="right" width="48">
                                     <template #trigger>
                                         <span class="inline-flex rounded-md">
@@ -197,7 +197,7 @@ const version = computed(() => usePage().props.version);
 
             <!-- Page Heading -->
             <header
-                class="bg-white shadow"
+                class="bg-white shadow z-1"
                 v-if="$slots.header"
             >
                 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -216,4 +216,10 @@ const version = computed(() => usePage().props.version);
 </template>
 
 <style>
+/* Debug style to force dropdown visibility */
+.dropdown-debug {
+    z-index: 9999 !important;
+    position: absolute !important;
+    display: block !important;
+}
 </style>
