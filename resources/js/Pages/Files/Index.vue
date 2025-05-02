@@ -19,8 +19,10 @@
                     </button>
                 </div>
 
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <!-- File Upload Card -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6 text-gray-900">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Upload New File</h3>
                         <p class="mb-4 text-sm text-gray-600">Upload your MP3 or ZIP file (max 20MB) and add a custom thumbnail to make it easily identifiable.</p>
                         
                         <FileUploader
@@ -54,116 +56,118 @@
                                 {{ uploading ? 'Uploading...' : 'Upload' }}
                             </button>
                         </form>
+                    </div>
+                </div>
 
-                        <!-- Files List -->
-                        <div class="mt-8">
-                            <h3 class="text-lg font-medium text-gray-900">Uploaded Files</h3>
-                            <div v-if="!files.length" class="mt-4 text-center py-12 bg-gray-50 rounded-lg">
-                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                </svg>
-                                <h3 class="mt-2 text-sm font-medium text-gray-900">No files uploaded</h3>
-                                <p class="mt-1 text-sm text-gray-500">Get started by uploading your first file above.</p>
-                            </div>
-                            <div v-else class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                                <div v-for="file in files" :key="file.id" class="relative bg-white border rounded-lg shadow-sm">
-                                    <div class="p-4">
-                                        <div class="aspect-w-1 aspect-h-1 mb-4 relative w-full h-[180px] group">
-                                            <div class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg shadow-inner py-4">
-                                                <img
-                                                    v-if="file.thumbnail"
-                                                    :src="file.thumbnail"
-                                                    :alt="file.title"
-                                                    class="max-h-[150px] max-w-[150px] object-contain rounded-lg shadow-md"
-                                                >
-                                                <div v-else class="w-full h-full flex items-center justify-center">
-                                                    <svg v-if="file.type === 'audio'" class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                                                    </svg>
-                                                    <svg v-else class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                            <!-- Replace Thumbnail Button -->
-                                            <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
-                                                <input
-                                                    type="file"
-                                                    :id="'thumbnail-' + file.id"
-                                                    class="hidden"
-                                                    accept="image/*"
-                                                    @change="(e) => replaceThumbnail(e, file.id)"
-                                                >
-                                                <label
-                                                    :for="'thumbnail-' + file.id"
-                                                    class="px-3 py-2 bg-white text-gray-700 rounded-md cursor-pointer hover:bg-gray-100 transition-colors"
-                                                >
-                                                    Replace Thumbnail
-                                                </label>
+                <!-- Files List Card -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900">
+                        <h3 class="text-lg font-medium text-gray-900">Uploaded Files</h3>
+                        <div v-if="!files.length" class="mt-4 text-center py-12 bg-gray-50 rounded-lg">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">No files uploaded</h3>
+                            <p class="mt-1 text-sm text-gray-500">Get started by uploading your first file above.</p>
+                        </div>
+                        <div v-else class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            <div v-for="file in files" :key="file.id" class="relative bg-white border rounded-lg shadow-sm">
+                                <div class="p-4">
+                                    <div class="aspect-w-1 aspect-h-1 mb-4 relative w-full h-[180px] group">
+                                        <div class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg shadow-inner py-4">
+                                            <img
+                                                v-if="file.thumbnail"
+                                                :src="file.thumbnail"
+                                                :alt="file.title"
+                                                class="max-h-[150px] max-w-[150px] object-contain rounded-lg shadow-md"
+                                            >
+                                            <div v-else class="w-full h-full flex items-center justify-center">
+                                                <svg v-if="file.type === 'audio'" class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                                </svg>
+                                                <svg v-else class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                                </svg>
                                             </div>
                                         </div>
-                                        <div class="flex items-center justify-between">
-                                            <div v-if="editingFile === file.id" class="flex items-center gap-2">
-                                                <input
-                                                    type="text"
-                                                    v-model="editTitle"
-                                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                                    @keyup.enter="updateFileTitle(file.id)"
-                                                    @keyup.esc="cancelEdit"
-                                                >
-                                                <button 
-                                                    @click="updateFileTitle(file.id)"
-                                                    class="text-green-600 hover:text-green-700"
-                                                    title="Save"
-                                                >
-                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                </button>
-                                                <button 
-                                                    @click="cancelEdit"
-                                                    class="text-gray-400 hover:text-gray-500"
-                                                    title="Cancel"
-                                                >
-                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                            <h4 v-else class="text-lg font-medium text-gray-900" @dblclick="startEdit(file)">
-                                                {{ file.title }}
-                                            </h4>
-                                            <button 
-                                                v-if="!editingFile"
-                                                @click="startEdit(file)" 
-                                                class="text-gray-400 hover:text-gray-500"
-                                                title="Edit title"
+                                        <!-- Replace Thumbnail Button -->
+                                        <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+                                            <input
+                                                type="file"
+                                                :id="'thumbnail-' + file.id"
+                                                class="hidden"
+                                                accept="image/*"
+                                                @change="(e) => replaceThumbnail(e, file.id)"
                                             >
-                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                            <label
+                                                :for="'thumbnail-' + file.id"
+                                                class="px-3 py-2 bg-white text-gray-700 rounded-md cursor-pointer hover:bg-gray-100 transition-colors"
+                                            >
+                                                Replace Thumbnail
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div v-if="editingFile === file.id" class="flex items-center gap-2">
+                                            <input
+                                                type="text"
+                                                v-model="editTitle"
+                                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                @keyup.enter="updateFileTitle(file.id)"
+                                                @keyup.esc="cancelEdit"
+                                            >
+                                            <button 
+                                                @click="updateFileTitle(file.id)"
+                                                class="text-green-600 hover:text-green-700"
+                                                title="Save"
+                                            >
+                                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </button>
+                                            <button 
+                                                @click="cancelEdit"
+                                                class="text-gray-400 hover:text-gray-500"
+                                                title="Cancel"
+                                            >
+                                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                                 </svg>
                                             </button>
                                         </div>
-                                        <div class="mt-2 text-sm text-gray-500">
-                                            <p><span class="text-gray-700">File Name:</span> {{ file.filename }}</p>
-                                            <p>Size: {{ file.size }}</p>
-                                            <p>Uploaded: {{ file.created_at }}</p>
-                                            <p>Downloads: {{ file.download_count }}</p>
-                                        </div>
-                                        <div class="mt-4 -mx-4 -mb-4 flex divide-x border-t">
-                                            <a
-                                                :href="route('codes.index', { file: file.id })"
-                                                class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-green-50 hover:bg-green-100 transition-colors text-sm font-medium text-green-700 hover:text-green-800 whitespace-nowrap"
-                                            >
-                                                Manage Codes
-                                            </a>
-                                            <button
-                                                @click="deleteFile(file.id)"
-                                                class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-rose-50 hover:bg-rose-100 transition-colors text-sm font-medium text-rose-700 hover:text-rose-800"
-                                            >
-                                                Delete
-                                            </button>
-                                        </div>
+                                        <h4 v-else class="text-lg font-medium text-gray-900" @dblclick="startEdit(file)">
+                                            {{ file.title }}
+                                        </h4>
+                                        <button 
+                                            v-if="!editingFile"
+                                            @click="startEdit(file)" 
+                                            class="text-gray-400 hover:text-gray-500"
+                                            title="Edit title"
+                                        >
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div class="mt-2 text-sm text-gray-500">
+                                        <p><span class="text-gray-700">File Name:</span> {{ file.filename }}</p>
+                                        <p>Size: {{ file.size }}</p>
+                                        <p>Uploaded: {{ file.created_at }}</p>
+                                        <p>Downloads: {{ file.download_count }}</p>
+                                    </div>
+                                    <div class="mt-4 -mx-4 -mb-4 flex divide-x border-t">
+                                        <a
+                                            :href="route('codes.index', { file: file.id })"
+                                            class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-green-50 hover:bg-green-100 transition-colors text-sm font-medium text-green-700 hover:text-green-800 whitespace-nowrap"
+                                        >
+                                            Manage Codes
+                                        </a>
+                                        <button
+                                            @click="deleteFile(file.id)"
+                                            class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-rose-50 hover:bg-rose-100 transition-colors text-sm font-medium text-rose-700 hover:text-rose-800"
+                                        >
+                                            Delete
+                                        </button>
                                     </div>
                                 </div>
                             </div>
