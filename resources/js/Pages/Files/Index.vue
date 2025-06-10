@@ -852,9 +852,14 @@ const redirectToNewFiles = async () => {
     // Scroll to the files section after a brief delay to allow the DOM to update
     setTimeout(() => {
         if (filesListSection.value) {
-            filesListSection.value.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
+            // Get the position of the files section
+            const rect = filesListSection.value.getBoundingClientRect();
+            const offset = window.pageYOffset + rect.top - 100; // 100px offset to show more of the card
+            
+            // Smooth scroll to the calculated position
+            window.scrollTo({
+                top: offset,
+                behavior: 'smooth'
             });
         }
     }, 200);
