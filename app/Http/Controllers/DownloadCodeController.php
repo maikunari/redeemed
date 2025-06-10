@@ -207,6 +207,7 @@ class DownloadCodeController extends Controller
             return [
                 'code' => $code->code,
                 'file_title' => $code->file->title,
+                'file_thumbnail' => $code->file->thumbnail_url,
                 'redemption_url' => route('codes.show-form', ['code' => $code->code]),
                 'qr_code' => $this->generateQrCodeData($code),
                 'expires_at' => $code->expires_at ? $code->expires_at->format('M j, Y') : null,
