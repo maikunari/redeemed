@@ -39,7 +39,7 @@
                                 {{ showContactForm ? 'Contact Support' : 'Enter Your Download Code' }}
                             </h2>
                             <p class="mt-2 text-sm text-gray-600">
-                                {{ showContactForm ? 'Fill out the form below and we\'ll get back to you soon' : 'Type or paste your code below' }}
+                                {{ showContactForm ? contactSubtitle : 'Type or paste your code below' }}
                             </p>
                         </div>
 
@@ -97,13 +97,6 @@
                                 >
                                     Enter Another Code
                                 </button>
-                                
-                                <a
-                                    href="/"
-                                    class="text-sm text-gray-600 hover:text-gray-900"
-                                >
-                                    Return to Home
-                                </a>
                             </div>
                         </div>
 
@@ -139,15 +132,20 @@
                                         <p v-if="form.errors.code" class="mt-3 text-sm text-center text-red-600">
                                             {{ form.errors.code }}
                                         </p>
+                                        <div v-if="form.errors.code" class="mt-3 flex justify-center gap-4 text-sm">
+                                            <button type="button" @click="resetForm" class="text-indigo-600 hover:text-indigo-800 underline">
+                                                Try again
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div>
                                         <button
                                             type="submit"
-                                            :disabled="!isCodeComplete || form.processing"
+                                            :disabled="!isCodeComplete || form.processing || form.errors.code"
                                             class="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-base sm:text-sm font-medium text-white bg-indigo-600 transition-all duration-150"
                                             :class="{
-                                                'opacity-75 cursor-not-allowed': !isCodeComplete || form.processing,
+                                                'opacity-75 cursor-not-allowed': !isCodeComplete || form.processing || form.errors.code,
                                                 'hover:bg-indigo-700': isCodeComplete && !form.processing
                                             }"
                                         >
@@ -162,7 +160,18 @@
                             </div>
 
                             <div v-show="showContactForm">
-                                <ContactForm @sent="showContactForm = false" />
+                                <template v-if="!contactSubmitted">
+                                    <ContactForm @sent="handleContactSent" />
+                                </template>
+                                <template v-else>
+                                    <div class="animate-fade-in text-center space-y-4 py-6">
+                                        <svg class="mx-auto h-12 w-12 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <h3 class="text-lg font-medium text-gray-800">Thank you!</h3>
+                                        <p class="text-sm text-gray-600">{{ contactThankyou }}</p>
+                                    </div>
+                                </template>
                             </div>
                         </div>
 
@@ -190,6 +199,9 @@
 <script setup>
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
+const page = usePage();
+const siteName = computed(() => page.props.settings?.site_name || 'redeem');
+const logo     = computed(() => page.props.settings?.logo      || '');
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import ContactForm from '@/Components/ContactForm.vue';
 
@@ -220,6 +232,7 @@ const isLoading = ref(false);
 const error = ref(null);
 const downloadUrl = ref(null);
 const showContactForm = ref(false);
+const contactSubmitted = ref(false);
 
 const form = useForm({
     code: '',
@@ -231,6 +244,9 @@ const isCodeComplete = computed(() => {
 });
 
 const fluidAnimation = ref(null);
+
+const contactSubtitle = computed(() => page.props.settings?.contact_subtitle || "Fill out the form below and we'll get back to you soon");
+const contactThankyou = computed(() => page.props.settings?.contact_thankyou || 'Your message has been sent successfully.');
 
 onMounted(() => {
     // Focus first input on mount
@@ -372,6 +388,9 @@ const handleInput = (index) => {
         digit = digit.replace(/[^2-9]/g, '');
         codeDigits.value[index] = digit;
         
+        if (form.errors.code) {
+            form.clearErrors('code');
+        }
         if (digit && index < 5 && codeInputs.value[index + 1]) {
             codeInputs.value[index + 1].focus();
         }
@@ -431,6 +450,9 @@ const resetForm = () => {
     showSuccess.value = false;
     showError.value = false;
     showTroubleshooting.value = false;
+    form.clearErrors('code');
+    form.code = '';
+    form.validate = false;
 };
 
 const submit = () => {
@@ -439,51 +461,66 @@ const submit = () => {
     downloadProgress.value = 0;
     form.code = codeDigits.value.join('');
     
-    // First validate
-    form.validate = true;
-    form.post(route('codes.redeem'), {
-        preserveScroll: true,
-        onSuccess: () => {
-            // If validation succeeds, trigger download
-            form.validate = false;
-            
-            // Use axios for the download request to handle the stream
-            axios.post(route('codes.redeem'), 
-                { code: form.code },
-                { 
-                    responseType: 'blob',
-                    headers: {
-                        'X-XSRF-TOKEN': usePage().props.csrf_token,
-                    }
-                }
-            ).then(response => {
-                // Get filename from the Content-Disposition header
-                const contentDisposition = response.headers['content-disposition'];
-                const filename = contentDisposition
-                    ? contentDisposition.split('filename=')[1].replace(/["']/g, '')
-                    : 'download';
+    // Generate a unique request ID for this submission
+    const requestId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    
+    // Use axios for the download request directly, handling both validation and download in one request
+    axios.post(route('codes.redeem'), 
+        { code: form.code, requestId: requestId },
+        { 
+            responseType: 'blob',
+            headers: {
+                'X-XSRF-TOKEN': usePage().props.csrf_token,
+            }
+        }
+    ).then(response => {
+        // Get filename from the Content-Disposition header
+        const contentDisposition = response.headers['content-disposition'];
+        const filename = contentDisposition
+            ? contentDisposition.split('filename=')[1].replace(/["']/g, '')
+            : 'download';
 
-                // Create a blob URL and trigger download
-                const blob = new Blob([response.data], { type: response.headers['content-type'] });
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = filename;
-                document.body.appendChild(link);
-                link.click();
-                
-                // Cleanup
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(link);
-                downloadProgress.value = 100;
-            }).catch(error => {
-                form.setError('code', error.response?.data?.message || 'Download failed');
-                downloadStarted.value = false;
-            });
-        },
-        onError: (errors) => {
-            form.setError('code', errors.message || 'Invalid code');
-            downloadStarted.value = false;
+        // Create a blob URL and trigger download
+        const blob = new Blob([response.data], { type: response.headers['content-type'] });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        
+        // Cleanup
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(link);
+        downloadProgress.value = 100;
+    }).catch(error => {
+        downloadStarted.value = false;
+        if (error.response && error.response.data) {
+            // Log the raw error response for debugging
+            console.error('Raw error response:', error.response);
+            // Try to parse the error message from the response
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    console.error('Parsed error JSON:', json);
+                    let errorMessage = json.errors?.code || json.message || 'An error occurred during redemption.';
+                    // Ensure errorMessage is a string before calling replace
+                    if (typeof errorMessage !== 'string') {
+                        errorMessage = String(errorMessage);
+                    }
+                    // Remove square brackets from the error message
+                    errorMessage = errorMessage.replace(/\[|\]/g, '');
+                    form.errors.code = errorMessage;
+                } catch (e) {
+                    console.error('Failed to parse error JSON:', e);
+                    form.errors.code = 'An error occurred during redemption.';
+                }
+            };
+            reader.readAsText(error.response.data);
+        } else {
+            console.error('No error response data:', error);
+            form.errors.code = 'Failed to download file. Please try again.';
         }
     });
 };
@@ -514,24 +551,13 @@ const handleBackupDownload = () => {
         error.value = 'Failed to initiate backup download';
     });
 };
+
+const handleContactSent = () => {
+    contactSubmitted.value = true;
+};
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@1,900&display=swap');
-
-.animate-spin {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 /* Add subtle gradient animation */
 .bg-gradient-to-br {
     background-size: 400% 400%;
@@ -571,6 +597,15 @@ input[type=number] {
     transition-property: all;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 300ms;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>
 

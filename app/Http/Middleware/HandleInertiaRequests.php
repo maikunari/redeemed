@@ -31,14 +31,19 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         return array_merge(parent::share($request), [
-            'auth' => [
-                'user' => $request->user(),
-            ],
-            'version' => !$request->routeIs('codes.show-form') ? config('version.version') : null,
-            'settings' => $request->routeIs('codes.show-form') ? [
-                'site_name' => app(Settings::class)->first()?->site_name,
-                'logo' => app(Settings::class)->first()?->logo_url,
-            ] : null,
-        ]);
+        'auth'     => ['user' => $request->user()],
+        'version'  => config('version.version'),      // ← always present
+        'logo'      => app(Settings::class)->first()?->logo_url,
+        'siteName'  => app(Settings::class)->first()?->site_name,
+        'settings' => $request->routeIs('codes.show-form')
+                       ? [
+                           'site_name' => app(Settings::class)->first()?->site_name,
+                           'logo'      => app(Settings::class)->first()?->logo_url,
+                           'support_email' => app(Settings::class)->first()?->support_email,
+                           'contact_subtitle' => app(Settings::class)->first()?->contact_subtitle,
+                           'contact_thankyou' => app(Settings::class)->first()?->contact_thankyou,
+                         ]
+                       : null,
+    ]);
     }
 }

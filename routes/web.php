@@ -4,20 +4,18 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\DownloadCodeController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('Redeem/Form');
-});
+})->name('codes.show-form');
 
-Route::get('/dashboard', function () {
-    $settings = app(SettingsController::class)->index();
-    return Inertia::render('Dashboard', [
-        'settings' => $settings
-    ]);
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -34,13 +32,24 @@ Route::middleware('auth')->group(function () {
     Route::get('/files/{file}/download', [FileController::class, 'download'])->name('files.download');
     Route::post('/files/{file}/thumbnail', [FileController::class, 'updateThumbnail'])->name('files.update-thumbnail');
     
+    // FTP upload routes
+    Route::get('/files/ftp/scan', [FileController::class, 'scanFtpStaging'])->name('files.scan-ftp');
+    Route::post('/files/ftp/process', [FileController::class, 'processFtpFiles'])->name('files.process-ftp');
+    Route::get('/files/ftp/history', [FileController::class, 'getFtpProcessingHistory'])->name('files.ftp-history');
+    
     // Download code routes
     Route::get('/codes', [DownloadCodeController::class, 'allCodes'])->name('codes.index');
     Route::get('/files/{file}/codes', [DownloadCodeController::class, 'index'])->name('codes.file');
     Route::post('/files/{file}/codes', [DownloadCodeController::class, 'store'])->name('codes.store');
     Route::get('/files/{file}/codes/export', [DownloadCodeController::class, 'export'])->name('codes.export');
+Route::post('/files/{file}/codes/export-cards', [DownloadCodeController::class, 'exportCards'])->name('codes.export-cards');
     Route::get('/codes/{code}/qr', [DownloadCodeController::class, 'generateQr'])->name('codes.qr');
+    Route::delete('/codes/{code}', [DownloadCodeController::class, 'destroy'])->name('codes.destroy');
+    Route::patch('/codes/{code}/renew', [DownloadCodeController::class, 'renew'])->name('codes.renew');
 });
+
+// Public route for contact support
+Route::post('/contact', [\App\Http\Controllers\SupportController::class, 'store'])->name('support.send');
 
 // Public route for code redemption
 Route::post('/redeem', [DownloadCodeController::class, 'redeem'])->name('codes.redeem');

@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\File;
+use App\Models\FtpProcessingLog;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Http\JsonResponse;
 
 class FileController extends Controller
 {
@@ -170,5 +173,258 @@ class FileController extends Controller
         }
         
         return false;
+    }
+
+    /**
+     * Scan FTP staging directory for uploaded files
+     */
+    public function scanFtpStaging(): JsonResponse
+    {
+        try {
+            // Call the artisan command to scan FTP staging
+            Artisan::call('files:scan-ftp-staging', ['--json' => true]);
+            $output = Artisan::output();
+            
+            $result = json_decode(trim($output), true);
+            
+            if (!$result) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Failed to scan FTP staging directory'
+                ], 500);
+            }
+            
+            // Map the data structure to match frontend expectations
+            $mappedFiles = collect($result['files'] ?? [])->map(function ($file) {
+                return [
+                    'filename' => $file['filename'],
+                    'title' => $file['final_title'],
+                    'size' => $file['size_formatted'],
+                    'type' => $file['extension'] === 'mp3' ? 'audio' : 'archive',
+                    'valid' => $file['is_valid'],
+                    'error' => $file['error']
+                ];
+            })->toArray();
+            
+            return response()->json([
+                'success' => $result['success'],
+                'count' => $result['count'],
+                'files' => $mappedFiles
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error scanning FTP staging: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Process selected FTP files
+     */
+    public function processFtpFiles(Request $request): JsonResponse
+    {
+        $request->validate([
+            'files' => 'required|array|min:1',
+            'files.*' => 'required|string'
+        ]);
+
+        $startTime = microtime(true);
+        $filenames = $request->input('files', []);
+        
+        $results = [
+            'success' => true,
+            'processed' => [],
+            'failed' => [],
+            'deleted' => [],
+            'conflicts' => 0,
+            'total' => count($filenames)
+        ];
+
+        $stagingPath = storage_path('app/ftp-staging');
+        $processedPath = storage_path('app/ftp-processed');
+
+        foreach ($filenames as $filename) {
+            try {
+                $filePath = $stagingPath . '/' . $filename;
+                
+                // Verify file exists
+                if (!file_exists($filePath)) {
+                    $results['failed'][] = [
+                        'filename' => $filename,
+                        'error' => 'File not found'
+                    ];
+                    continue;
+                }
+
+                // Validate file type
+                $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                if (!$this->isValidFtpFile($filePath, $extension)) {
+                    // Delete invalid file
+                    unlink($filePath);
+                    $results['deleted'][] = [
+                        'filename' => $filename,
+                        'reason' => 'Invalid file type'
+                    ];
+                    continue;
+                }
+
+                // Generate unique title
+                $baseTitle = pathinfo($filename, PATHINFO_FILENAME);
+                $finalTitle = $this->generateUniqueTitle($baseTitle);
+                
+                // Track conflicts
+                if ($finalTitle !== $baseTitle) {
+                    $results['conflicts']++;
+                }
+
+                // Create File model
+                $fileModel = File::create(['title' => $finalTitle]);
+
+                // Copy file to processed folder first (before media library consumes it)
+                $processedFilePath = $processedPath . '/' . date('Y-m-d_H-i-s_') . $filename;
+                copy($filePath, $processedFilePath);
+
+                // Move file to Spatie media library (this will consume the original file)
+                // Preserve original filename to ensure consistent naming
+                $fileModel->addMedia($filePath)
+                    ->usingFileName($filename)
+                    ->usingName($finalTitle)
+                    ->toMediaCollection('files');
+
+                $results['processed'][] = [
+                    'filename' => $filename,
+                    'title' => $finalTitle,
+                    'file_id' => $fileModel->id
+                ];
+
+            } catch (\Exception $e) {
+                // Log the error for debugging
+                \Log::error('FTP Processing Error for ' . $filename . ': ' . $e->getMessage());
+                \Log::error('Stack trace: ' . $e->getTraceAsString());
+                
+                $results['failed'][] = [
+                    'filename' => $filename,
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+
+        // Calculate processing time
+        $endTime = microtime(true);
+        $processingTimeMs = round(($endTime - $startTime) * 1000);
+
+        // Create log entry
+        $logEntry = FtpProcessingLog::create([
+            'processed_at' => now(),
+            'total_files' => $results['total'],
+            'files_processed' => count($results['processed']),
+            'files_invalid' => count($results['deleted']),
+            'files_conflicts' => $results['conflicts'],
+            'files_failed' => count($results['failed']),
+            'processing_details' => [
+                'processed_files' => $results['processed'],
+                'deleted_files' => $results['deleted'],
+                'failed_files' => $results['failed']
+            ],
+            'errors' => collect($results['failed'])->pluck('error')->toArray(),
+            'success' => count($results['failed']) === 0,
+            'processing_time_ms' => $processingTimeMs,
+            'user_id' => auth()->id()
+        ]);
+
+        // Map results to match frontend expectations
+        $response = [
+            'success' => count($results['failed']) === 0,
+            'processed' => count($results['processed']),
+            'invalid' => count($results['deleted']),
+            'conflicts' => $results['conflicts'],
+            'errors' => collect($results['failed'])->pluck('error')->toArray(),
+            'details' => [
+                'processed_files' => $results['processed'],
+                'deleted_files' => $results['deleted'],
+                'failed_files' => $results['failed']
+            ],
+            'log_id' => $logEntry->id
+        ];
+
+        return response()->json($response);
+    }
+
+    /**
+     * Get FTP processing history
+     */
+    public function getFtpProcessingHistory(): JsonResponse
+    {
+        $logs = FtpProcessingLog::with('user')
+            ->orderBy('processed_at', 'desc')
+            ->limit(50) // Last 50 processing sessions
+            ->get()
+            ->map(function ($log) {
+                return [
+                    'id' => $log->id,
+                    'processed_at' => $log->formatted_processed_at,
+                    'user_name' => $log->user?->name ?? 'Unknown',
+                    'total_files' => $log->total_files,
+                    'files_processed' => $log->files_processed,
+                    'files_invalid' => $log->files_invalid,
+                    'files_conflicts' => $log->files_conflicts,
+                    'files_failed' => $log->files_failed,
+                    'success' => $log->success,
+                    'processing_time' => $log->processing_time_sec,
+                    'summary' => $log->summary,
+                    'errors' => $log->errors,
+                    'processing_details' => $log->processing_details
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'logs' => $logs
+        ]);
+    }
+
+    /**
+     * Validate FTP uploaded file (similar to existing validation but for file paths)
+     */
+    private function isValidFtpFile($filePath, $extension)
+    {
+        if (!in_array($extension, ['mp3', 'zip'])) {
+            return false;
+        }
+
+        $content = file_get_contents($filePath, false, null, 0, 4096);
+        
+        if ($extension === 'mp3') {
+            // Check for MP3 frame synchronization bytes
+            return strpos($content, "\xFF\xFB") !== false || 
+                   strpos($content, "\xFF\xFA") !== false ||
+                   strpos($content, "\xFF\xF3") !== false ||
+                   strpos($content, "\xFF\xF2") !== false;
+        }
+        
+        if ($extension === 'zip') {
+            // Check for ZIP file signature
+            return strpos($content, "PK\x03\x04") === 0;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Generate unique title handling naming conflicts
+     */
+    private function generateUniqueTitle($baseTitle)
+    {
+        $title = $baseTitle;
+        $counter = 1;
+        
+        while (File::where('title', $title)->exists()) {
+            $counter++;
+            $title = $baseTitle . '-' . $counter;
+        }
+        
+        return $title;
     }
 }
