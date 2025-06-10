@@ -18,7 +18,7 @@
                         <!-- Main Control Row -->
                         <div class="grid grid-cols-2 gap-8 mb-6 items-center">
                             <!-- Left Side: File Selection and Search -->
-                            <div class="space-y-4">
+                            <div class="bg-gray-50 rounded-lg p-6 shadow-inner space-y-4">
                                 <!-- File Selection -->
                                 <div>
                                     <label for="file-select" class="block text-sm font-medium text-gray-700 mb-1">Select File</label>
