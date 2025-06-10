@@ -8,6 +8,8 @@ use Inertia\Inertia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Http\JsonResponse;
 
 class FileController extends Controller
 {
@@ -170,5 +172,157 @@ class FileController extends Controller
         }
         
         return false;
+    }
+
+    /**
+     * Scan FTP staging directory for uploaded files
+     */
+    public function scanFtpStaging(): JsonResponse
+    {
+        try {
+            // Call the artisan command to scan FTP staging
+            Artisan::call('files:scan-ftp-staging', ['--json' => true]);
+            $output = Artisan::output();
+            
+            $result = json_decode(trim($output), true);
+            
+            if (!$result) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Failed to scan FTP staging directory'
+                ], 500);
+            }
+            
+            return response()->json($result);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error scanning FTP staging: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Process selected FTP files
+     */
+    public function processFtpFiles(Request $request): JsonResponse
+    {
+        $request->validate([
+            'files' => 'required|array|min:1',
+            'files.*' => 'required|string'
+        ]);
+
+        $results = [
+            'success' => true,
+            'processed' => [],
+            'failed' => [],
+            'deleted' => [],
+            'total' => count($request->files)
+        ];
+
+        $stagingPath = storage_path('app/ftp-staging');
+        $processedPath = storage_path('app/ftp-processed');
+
+        foreach ($request->files as $filename) {
+            try {
+                $filePath = $stagingPath . '/' . $filename;
+                
+                // Verify file exists
+                if (!file_exists($filePath)) {
+                    $results['failed'][] = [
+                        'filename' => $filename,
+                        'error' => 'File not found'
+                    ];
+                    continue;
+                }
+
+                // Validate file type
+                $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                if (!$this->isValidFtpFile($filePath, $extension)) {
+                    // Delete invalid file
+                    unlink($filePath);
+                    $results['deleted'][] = [
+                        'filename' => $filename,
+                        'reason' => 'Invalid file type'
+                    ];
+                    continue;
+                }
+
+                // Generate unique title
+                $baseTitle = pathinfo($filename, PATHINFO_FILENAME);
+                $finalTitle = $this->generateUniqueTitle($baseTitle);
+
+                // Create File model
+                $fileModel = File::create(['title' => $finalTitle]);
+
+                // Move file to Spatie media library
+                $fileModel->addMedia($filePath)->toMediaCollection('files');
+
+                // Move original to processed folder
+                $processedFilePath = $processedPath . '/' . date('Y-m-d_H-i-s_') . $filename;
+                rename($filePath, $processedFilePath);
+
+                $results['processed'][] = [
+                    'filename' => $filename,
+                    'title' => $finalTitle,
+                    'file_id' => $fileModel->id
+                ];
+
+            } catch (\Exception $e) {
+                $results['failed'][] = [
+                    'filename' => $filename,
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+
+        // Determine overall success
+        $results['success'] = count($results['failed']) === 0;
+
+        return response()->json($results);
+    }
+
+    /**
+     * Validate FTP uploaded file (similar to existing validation but for file paths)
+     */
+    private function isValidFtpFile($filePath, $extension)
+    {
+        if (!in_array($extension, ['mp3', 'zip'])) {
+            return false;
+        }
+
+        $content = file_get_contents($filePath, false, null, 0, 4096);
+        
+        if ($extension === 'mp3') {
+            // Check for MP3 frame synchronization bytes
+            return strpos($content, "\xFF\xFB") !== false || 
+                   strpos($content, "\xFF\xFA") !== false ||
+                   strpos($content, "\xFF\xF3") !== false ||
+                   strpos($content, "\xFF\xF2") !== false;
+        }
+        
+        if ($extension === 'zip') {
+            // Check for ZIP file signature
+            return strpos($content, "PK\x03\x04") === 0;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Generate unique title handling naming conflicts
+     */
+    private function generateUniqueTitle($baseTitle)
+    {
+        $title = $baseTitle;
+        $counter = 1;
+        
+        while (File::where('title', $title)->exists()) {
+            $counter++;
+            $title = $baseTitle . '-' . $counter;
+        }
+        
+        return $title;
     }
 }

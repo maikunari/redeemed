@@ -32,6 +32,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/files/{file}/download', [FileController::class, 'download'])->name('files.download');
     Route::post('/files/{file}/thumbnail', [FileController::class, 'updateThumbnail'])->name('files.update-thumbnail');
     
+    // FTP upload routes
+    Route::get('/files/ftp/scan', [FileController::class, 'scanFtpStaging'])->name('files.scan-ftp');
+    Route::post('/files/ftp/process', [FileController::class, 'processFtpFiles'])->name('files.process-ftp');
+    
     // Download code routes
     Route::get('/codes', [DownloadCodeController::class, 'allCodes'])->name('codes.index');
     Route::get('/files/{file}/codes', [DownloadCodeController::class, 'index'])->name('codes.file');

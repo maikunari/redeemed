@@ -11,15 +11,15 @@ Add FTP upload capability to Redeemed, allowing users to upload files via extern
 - [x] Add staging folder to .gitignore
 - [x] Set proper directory permissions
 
-### Phase 2: Backend Implementation
-- [ ] **New Artisan Command**: `files:scan-ftp-staging`
+### Phase 2: Backend Implementation ✅ COMPLETE
+- [x] **New Artisan Command**: `files:scan-ftp-staging`
   - Scan for files in staging
   - Validate file types (MP3/ZIP)
   - Return file list with metadata
-- [ ] **New Controller Method**: `FileController@scanFtpStaging`
+- [x] **New Controller Method**: `FileController@scanFtpStaging`
   - Call artisan command
   - Return JSON with available files
-- [ ] **New Controller Method**: `FileController@processFtpFiles`
+- [x] **New Controller Method**: `FileController@processFtpFiles`
   - Accept array of selected filenames
   - Process each file (validate → create File model → move to Spatie media)
   - Handle naming conflicts (append numbers)
