@@ -131,7 +131,7 @@
                 </div>
 
                 <!-- Files List Card -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div ref="filesListSection" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
                         <h3 class="text-lg font-medium text-gray-900">Uploaded Files</h3>
                         <div v-if="!files.length" class="mt-4 text-center py-12 bg-gray-50 rounded-lg">
@@ -569,6 +569,7 @@ const props = defineProps({
 });
 
 const fileUploader = ref(null);
+const filesListSection = ref(null);
 const selectedFile = ref(null);
 const selectedThumbnail = ref(null);
 const title = ref('');
@@ -842,10 +843,21 @@ const processFtpFiles = async () => {
     }
 };
 
-const redirectToNewFiles = () => {
+const redirectToNewFiles = async () => {
     closeFtpModal();
-    // Refresh the entire page to show new files
-    window.location.reload();
+    
+    // Refresh the page data
+    await router.reload({ only: ['files'] });
+    
+    // Scroll to the files section after a brief delay to allow the DOM to update
+    setTimeout(() => {
+        if (filesListSection.value) {
+            filesListSection.value.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }
+    }, 200);
 };
 
 const openHistoryModal = async () => {

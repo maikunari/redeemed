@@ -287,7 +287,11 @@ class FileController extends Controller
                 copy($filePath, $processedFilePath);
 
                 // Move file to Spatie media library (this will consume the original file)
-                $fileModel->addMedia($filePath)->toMediaCollection('files');
+                // Preserve original filename to ensure consistent naming
+                $fileModel->addMedia($filePath)
+                    ->usingFileName($filename)
+                    ->usingName($finalTitle)
+                    ->toMediaCollection('files');
 
                 $results['processed'][] = [
                     'filename' => $filename,
