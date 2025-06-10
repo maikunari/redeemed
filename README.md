@@ -11,7 +11,7 @@ A secure and user-friendly system for managing downloadable content through uniq
   - Secure upload/download handling
 
 - **Code Management**
-  - Unique, readable download codes (XXXX-XXXX format)
+  - Unique, readable download codes (XXXXXX format)
   - Usage tracking and limits
   - Code expiration support
   - CSV export functionality
