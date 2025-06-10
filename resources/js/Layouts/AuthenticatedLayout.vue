@@ -60,7 +60,7 @@ const version = computed(() => usePage().props.version);
 
                         <div class="hidden sm:ms-6 sm:flex sm:items-center">
                             <!-- Settings Dropdown -->
-                            <div class="relative ms-3 z-999">
+                            <div class="relative ms-3 z-50">
                                 <Dropdown align="right" width="48">
                                     <template #trigger>
                                         <span class="inline-flex rounded-md">
