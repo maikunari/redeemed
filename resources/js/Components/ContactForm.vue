@@ -100,15 +100,6 @@ watch(codeDigits, (newDigits) => {
 }, { deep: true, immediate: true });
 
 function submit() {
-    // Debug: Log what we're sending
-    console.log('Submitting contact form with data:', {
-        name: form.name,
-        email: form.email,
-        message: form.message,
-        download_code: form.download_code,
-        codeDigits: codeDigits.value
-    });
-    
     form.post(route('support.send'), {
         preserveScroll: true,
         onSuccess: () => {
