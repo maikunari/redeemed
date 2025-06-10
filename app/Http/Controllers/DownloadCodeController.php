@@ -13,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 use League\Csv\Writer;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Spatie\Browsershot\Browsershot;
+
 use App\Models\Settings;
 
 class DownloadCodeController extends Controller
@@ -202,12 +202,15 @@ class DownloadCodeController extends Controller
             return redirect()->back()->withErrors(['codes' => 'No codes found to export.']);
         }
 
+        // Increase execution time for PDF generation
+        set_time_limit(120); // 2 minutes
+        
         // Generate QR codes for each download code
         $codesWithQr = $codes->map(function ($code) {
             return [
                 'code' => $code->code,
                 'file_title' => $code->file->title,
-                'file_thumbnail' => $code->file->thumbnail_url,
+                'file_thumbnail' => $code->file->thumbnail_url ?? null, // Handle missing thumbnails gracefully
                 'redemption_url' => route('codes.show-form', ['code' => $code->code]),
                 'qr_code' => $this->generateQrCodeData($code),
                 'expires_at' => $code->expires_at ? $code->expires_at->format('M j, Y') : null,
@@ -215,65 +218,36 @@ class DownloadCodeController extends Controller
             ];
         });
 
-        // Generate front side PDF
-        $frontPdf = Pdf::loadView('pdf.business-cards-front', [
-            'codes' => $codesWithQr,
-            'app_name' => config('app.name'),
-            'website_url' => config('app.url'),
-        ]);
-        
-        // Configure PDF settings for business cards
-        $frontPdf->setPaper([0, 0, 612, 792], 'portrait') // 8.5" x 11" in points
-               ->setOptions([
-                   'dpi' => 300,
-                   'defaultFont' => 'helvetica',
-                   'isRemoteEnabled' => true,
-               ]);
-
-        // Generate back side PDF
-        $backPdf = Pdf::loadView('pdf.business-cards-back', [
-            'codes' => $codesWithQr,
-            'app_name' => config('app.name'),
-        ]);
-        
-        $backPdf->setPaper([0, 0, 612, 792], 'portrait')
-               ->setOptions([
-                   'dpi' => 300,
-                   'defaultFont' => 'helvetica',
-                   'isRemoteEnabled' => true,
-               ]);
-
         $safeTitle = str_replace(['/', '\\', '?', '%', '*', ':', '|', '"', '<', '>', '.', ','], '-', $file->title);
         
         // Get settings for card customization
         $settings = Settings::first();
         
-        // Generate HTML from Blade template
-        $html = view('pdf.business-cards-avery', [
-            'codes' => $codesWithQr,
-            'app_name' => config('app.name'),
-            'website_url' => $settings->card_website_url ?? config('app.url'),
-            'brand_name' => $settings->card_brand_name ?? $settings->site_name ?? config('app.name'),
-            'card_instructions' => $settings->card_instructions ?? 'Enter your download code at the website above to access your music.',
-            'qr_instruction' => $settings->card_qr_instruction ?? 'Scan to Download',
-        ])->render();
+        try {
+            // Generate PDF using DomPDF
+            $pdf = Pdf::loadView('pdf.business-cards-avery', [
+                'codes' => $codesWithQr,
+                'app_name' => config('app.name'),
+                'website_url' => $settings->card_website_url ?? config('app.url'),
+                'brand_name' => $settings->card_brand_name ?? $settings->site_name ?? config('app.name'),
+                'card_instructions' => $settings->card_instructions ?? 'Enter your download code at the website above to access your music.',
+                'qr_instruction' => $settings->card_qr_instruction ?? 'Scan to Download',
+            ]);
+            
+            // Configure PDF settings for business cards
+            $pdf->setPaper([0, 0, 612, 792], 'portrait') // 8.5" x 11" in points
+                   ->setOptions([
+                       'dpi' => 150, // Reduced DPI for faster generation
+                       'defaultFont' => 'serif',
+                       'isRemoteEnabled' => false, // Disable remote content loading for security and speed
+                   ]);
 
-        // Create PDF using Browsershot for better rendering
-        $pdfPath = storage_path("app/temp/{$safeTitle}-cards-avery-({$codes->count()}).pdf");
-        
-        // Ensure temp directory exists
-        if (!file_exists(dirname($pdfPath))) {
-            mkdir(dirname($pdfPath), 0755, true);
+            return $pdf->download("{$safeTitle}-cards-avery-({$codes->count()}).pdf");
+            
+        } catch (\Exception $e) {
+            \Log::error('PDF generation failed: ' . $e->getMessage());
+            return redirect()->back()->withErrors(['pdf' => 'Failed to generate PDF. Please try again or contact support.']);
         }
-
-        Browsershot::html($html)
-            ->setNodeBinary('/opt/homebrew/bin/node')
-            ->setNpmBinary('/opt/homebrew/bin/npm')
-            ->format('Letter')
-            ->margins(36, 27, 36, 27)  // 0.5in top/bottom, 0.375in left/right for better centering
-            ->savePdf($pdfPath);
-
-        return response()->download($pdfPath)->deleteFileAfterSend(true);
     }
 
     /**
@@ -283,12 +257,20 @@ class DownloadCodeController extends Controller
     {
         $redemptionUrl = route('codes.show-form', ['code' => $code->code]);
         
-        return base64_encode(
+        // Suppress deprecation warnings temporarily
+        error_reporting(E_ALL & ~E_DEPRECATED);
+        
+        $qrCode = base64_encode(
             QrCode::format('svg')
-                  ->size(200)
-                  ->errorCorrection('M')
+                  ->size(150) // Reduced size for faster generation
+                  ->errorCorrection('L') // Lower error correction for speed
                   ->generate($redemptionUrl)
         );
+        
+        // Restore error reporting
+        error_reporting(E_ALL);
+        
+        return $qrCode;
     }
 
     /**

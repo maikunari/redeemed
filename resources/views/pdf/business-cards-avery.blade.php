@@ -12,7 +12,7 @@
         
         @page {
             size: 8.5in 11in;
-            margin: 0;
+            margin: 0.5in 0.75in;
         }
         
         @media print {
@@ -25,65 +25,69 @@
         body {
             font-family: 'Georgia', 'Times New Roman', serif;
             background: white;
-            width: 8.5in;
-            height: 11in;
-            margin: 0 auto;
-            position: relative;
+            margin: 0;
+            padding: 0;
         }
         
         .page {
-            width: 8.5in;
-            height: 11in;
+            width: 100%;
             position: relative;
-            padding-top: 0.5in;
-            padding-left: 0.75in;
-            padding-right: 0.75in;
         }
         
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 3.5in);
-            grid-template-rows: repeat(5, 2in);
-            gap: 0;
+        /* Table-based layout for DomPDF compatibility */
+        .card-table {
             width: 100%;
-            height: 10in;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 0;
+        }
+        
+        .card-row {
+            page-break-inside: avoid;
+        }
+        
+        .card-cell {
+            width: 3.5in;
+            height: 2in;
+            vertical-align: top;
+            padding: 0.125in;
         }
         
         .business-card {
-            width: 3.5in;
-            height: 2in;
+            width: 100%;
+            height: 100%;
             position: relative;
-            display: flex;
-            flex-direction: row;
-            padding: 0;
-            background: #c4a3a3;
-            overflow: hidden;
+            background: #d4b5b5;
+            background: linear-gradient(135deg, #d4b5b5 0%, #c4a3a3 100%);
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
         
-        /* Front Side Styles */
+        /* Front Side Layout - Table for left/right sections */
         .front-card {
-            background: linear-gradient(135deg, #d4b5b5 0%, #c4a3a3 100%);
+            display: table;
+            width: 100%;
+            height: 100%;
         }
         
         .qr-section {
+            display: table-cell;
             width: 40%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 0.15in;
+            vertical-align: middle;
+            text-align: center;
+            padding: 0.1in;
             position: relative;
         }
         
         .qr-code {
             width: 0.9in;
             height: 0.9in;
-            margin-bottom: 8pt;
+            margin: 0 auto 8pt auto;
             border-radius: 4px;
             background: white;
             padding: 2px;
+            display: block;
         }
         
         .website-url {
@@ -92,24 +96,29 @@
             font-weight: 300;
             letter-spacing: 0.5pt;
             text-transform: uppercase;
-            margin-top: auto;
+            position: absolute;
+            bottom: 0.1in;
+            left: 0;
+            right: 0;
+            text-align: center;
         }
         
         .divider {
+            display: table-cell;
             width: 1px;
-            height: 100%;
             background: white;
             opacity: 0.8;
+            vertical-align: top;
+            padding: 0;
         }
         
         .content-section {
-            width: 60%;
+            display: table-cell;
+            width: 59%;
+            vertical-align: middle;
             padding: 0.15in;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            text-align: left;
             background: white;
+            position: relative;
         }
         
         .brand-name {
@@ -120,19 +129,31 @@
             letter-spacing: 2pt;
             text-transform: uppercase;
             font-family: 'Georgia', serif;
+            line-height: 1.1;
         }
         
         .file-title {
             font-size: 9pt;
             color: #666;
-            margin: 0 0 12pt 0;
+            margin: 0 0 8pt 0;
             font-style: italic;
             font-family: 'Georgia', serif;
             font-weight: 300;
+            line-height: 1.2;
+        }
+        
+        .file-thumbnail {
+            width: 50px;
+            height: 50px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin: 6pt 0;
+            border: 1pt solid #e0e0e0;
+            display: block;
         }
         
         .download-code {
-            font-size: 14pt;
+            font-size: 13pt;
             font-weight: bold;
             font-family: 'Courier New', monospace;
             color: #c4a3a3;
@@ -140,19 +161,10 @@
             border: 1pt solid #e0e0e0;
             border-radius: 4px;
             padding: 6pt 8pt;
-            margin: 8pt 0;
+            margin: 6pt 0;
             letter-spacing: 1pt;
             text-align: center;
-        }
-        
-        .file-thumbnail {
-            width: 60px;
-            height: 60px;
-            border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            object-fit: cover;
-            margin: 8pt 0;
-            border: 1pt solid #e0e0e0;
+            line-height: 1;
         }
         
         .usage-info {
@@ -165,9 +177,8 @@
         /* Back Side Styles */
         .back-card {
             background: white;
-            flex-direction: column;
             padding: 0.2in;
-            justify-content: space-between;
+            text-align: center;
         }
         
         .back-header {
@@ -187,23 +198,19 @@
         }
         
         .back-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            text-align: center;
+            margin: 10pt 0;
         }
         
         .download-instructions {
-            font-size: 10pt;
+            font-size: 9pt;
             color: #2d2d2d;
-            margin: 0 0 12pt 0;
-            line-height: 1.4;
+            margin: 0 0 10pt 0;
+            line-height: 1.3;
             font-family: 'Georgia', serif;
         }
         
         .download-code-back {
-            font-size: 16pt;
+            font-size: 15pt;
             font-weight: bold;
             font-family: 'Courier New', monospace;
             color: #c4a3a3;
@@ -234,7 +241,7 @@
             text-align: center;
             border-top: 1pt solid #e0e0e0;
             padding-top: 8pt;
-            margin-top: auto;
+            margin-top: 12pt;
         }
         
         .brand-footer {
@@ -247,53 +254,65 @@
         /* Print helpers */
         @media print {
             body { -webkit-print-color-adjust: exact; }
-            .business-card { page-break-inside: avoid; }
+            .card-row { page-break-inside: avoid; }
         }
     </style>
 </head>
 <body>
     <!-- FRONT SIDES PAGE -->
     <div class="page">
-        <div class="card-grid">
+        <table class="card-table">
             @foreach($codes->chunk(10) as $pageChunk)
-                @foreach($pageChunk as $codeData)
-                    <div class="business-card front-card">
-                        <div class="qr-section">
-                            <img src="data:image/svg+xml;base64,{{ $codeData['qr_code'] }}" 
-                                 alt="QR Code for {{ $codeData['code'] }}" 
-                                 class="qr-code">
-                            <div class="website-url">{{ parse_url($website_url ?? config('app.url'), PHP_URL_HOST) }}</div>
-                        </div>
+                @foreach($pageChunk->chunk(2) as $rowChunk)
+                    <tr class="card-row">
+                        @foreach($rowChunk as $codeData)
+                            <td class="card-cell">
+                                <div class="business-card">
+                                    <div class="front-card">
+                                        <div class="qr-section">
+                                            <img src="data:image/svg+xml;base64,{{ $codeData['qr_code'] }}" 
+                                                 alt="QR Code for {{ $codeData['code'] }}" 
+                                                 class="qr-code">
+                                            <div class="website-url">{{ parse_url($website_url ?? config('app.url'), PHP_URL_HOST) }}</div>
+                                        </div>
+                                        
+                                        <div class="divider"></div>
+                                        
+                                        <div class="content-section">
+                                            <div class="brand-name">{{ $brand_name ?? 'Redeemed' }}</div>
+                                            @if($codeData['file_title'])
+                                                <div class="file-title">{{ $codeData['file_title'] }}</div>
+                                            @endif
+                                            
+                                            {{-- Thumbnail temporarily disabled for PDF generation performance --}}
+                                            {{-- @if(isset($codeData['file_thumbnail']) && $codeData['file_thumbnail'])
+                                                <img src="{{ $codeData['file_thumbnail'] }}" 
+                                                     alt="File thumbnail" 
+                                                     class="file-thumbnail">
+                                            @endif --}}
+                                            
+                                            <div class="download-code">{{ $codeData['code'] }}</div>
+                                            <div class="usage-info">{{ $codeData['usage_info'] }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        @endforeach
                         
-                        <div class="divider"></div>
-                        
-                        <div class="content-section">
-                            <div class="brand-name">{{ $brand_name ?? 'Redeemed' }}</div>
-                            @if($codeData['file_title'])
-                                <div class="file-title">{{ $codeData['file_title'] }}</div>
-                            @endif
-                            
-                            @if(isset($codeData['file_thumbnail']) && $codeData['file_thumbnail'])
-                                <img src="{{ $codeData['file_thumbnail'] }}" 
-                                     alt="File thumbnail" 
-                                     class="file-thumbnail">
-                            @endif
-                            
-                            <div class="download-code">{{ $codeData['code'] }}</div>
-                            <div class="usage-info">{{ $codeData['usage_info'] }}</div>
-                        </div>
-                    </div>
+                        @if($rowChunk->count() == 1)
+                            <td class="card-cell"></td>
+                        @endif
+                    </tr>
                 @endforeach
                 
                 @if(!$loop->last)
-                    </div>
-                    </div>
+                    </table>
                     <div style="page-break-before: always;"></div>
                     <div class="page">
-                        <div class="card-grid">
+                        <table class="card-table">
                 @endif
             @endforeach
-        </div>
+        </table>
     </div>
 
     <!-- PAGE BREAK -->
@@ -301,39 +320,48 @@
 
     <!-- BACK SIDES PAGE -->
     <div class="page">
-        <div class="card-grid">
+        <table class="card-table">
             @foreach($codes->chunk(10) as $pageChunk)
-                @foreach($pageChunk as $codeData)
-                    <div class="business-card back-card">
-                        <div class="back-header">
-                            <div class="back-brand-name">{{ $brand_name ?? 'Redeemed' }}</div>
-                        </div>
+                @foreach($pageChunk->chunk(2) as $rowChunk)
+                    <tr class="card-row">
+                        @foreach($rowChunk as $codeData)
+                            <td class="card-cell">
+                                <div class="business-card back-card">
+                                    <div class="back-header">
+                                        <div class="back-brand-name">{{ $brand_name ?? 'Redeemed' }}</div>
+                                    </div>
+                                    
+                                    <div class="back-content">
+                                        <div class="download-instructions">{{ $card_instructions ?? 'Visit the website below and enter your download code to access your digital content.' }}</div>
+                                        
+                                        <div class="download-code-back">{{ $codeData['code'] }}</div>
+                                        
+                                        <div class="website-back">{{ parse_url($website_url ?? config('app.url'), PHP_URL_HOST) }}/redeem</div>
+                                        
+                                        <div class="qr-instructions">{{ $qr_instruction ?? 'Or scan the QR code on the front' }}</div>
+                                    </div>
+                                    
+                                    <div class="back-footer">
+                                        <div class="brand-footer">{{ $brand_name ?? 'Redeemed' }} - Digital Content</div>
+                                    </div>
+                                </div>
+                            </td>
+                        @endforeach
                         
-                        <div class="back-content">
-                            <div class="download-instructions">{{ $card_instructions ?? 'Visit the website below and enter your download code to access your digital content.' }}</div>
-                            
-                            <div class="download-code-back">{{ $codeData['code'] }}</div>
-                            
-                            <div class="website-back">{{ parse_url($website_url ?? config('app.url'), PHP_URL_HOST) }}/redeem</div>
-                            
-                            <div class="qr-instructions">{{ $qr_instruction ?? 'Or scan the QR code on the front' }}</div>
-                        </div>
-                        
-                        <div class="back-footer">
-                            <div class="brand-footer">{{ $brand_name ?? 'Redeemed' }} - Digital Content</div>
-                        </div>
-                    </div>
+                        @if($rowChunk->count() == 1)
+                            <td class="card-cell"></td>
+                        @endif
+                    </tr>
                 @endforeach
                 
                 @if(!$loop->last)
-                    </div>
-                    </div>
+                    </table>
                     <div style="page-break-before: always;"></div>
                     <div class="page">
-                        <div class="card-grid">
+                        <table class="card-table">
                 @endif
             @endforeach
-        </div>
+        </table>
     </div>
 </body>
 </html> 
