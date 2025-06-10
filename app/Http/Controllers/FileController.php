@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\File;
+use App\Models\FtpProcessingLog;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -229,6 +230,7 @@ class FileController extends Controller
             'files.*' => 'required|string'
         ]);
 
+        $startTime = microtime(true);
         $filenames = $request->input('files', []);
         
         $results = [
@@ -305,6 +307,29 @@ class FileController extends Controller
             }
         }
 
+        // Calculate processing time
+        $endTime = microtime(true);
+        $processingTimeMs = round(($endTime - $startTime) * 1000);
+
+        // Create log entry
+        $logEntry = FtpProcessingLog::create([
+            'processed_at' => now(),
+            'total_files' => $results['total'],
+            'files_processed' => count($results['processed']),
+            'files_invalid' => count($results['deleted']),
+            'files_conflicts' => $results['conflicts'],
+            'files_failed' => count($results['failed']),
+            'processing_details' => [
+                'processed_files' => $results['processed'],
+                'deleted_files' => $results['deleted'],
+                'failed_files' => $results['failed']
+            ],
+            'errors' => collect($results['failed'])->pluck('error')->toArray(),
+            'success' => count($results['failed']) === 0,
+            'processing_time_ms' => $processingTimeMs,
+            'user_id' => auth()->id()
+        ]);
+
         // Map results to match frontend expectations
         $response = [
             'success' => count($results['failed']) === 0,
@@ -316,10 +341,44 @@ class FileController extends Controller
                 'processed_files' => $results['processed'],
                 'deleted_files' => $results['deleted'],
                 'failed_files' => $results['failed']
-            ]
+            ],
+            'log_id' => $logEntry->id
         ];
 
         return response()->json($response);
+    }
+
+    /**
+     * Get FTP processing history
+     */
+    public function getFtpProcessingHistory(): JsonResponse
+    {
+        $logs = FtpProcessingLog::with('user')
+            ->orderBy('processed_at', 'desc')
+            ->limit(50) // Last 50 processing sessions
+            ->get()
+            ->map(function ($log) {
+                return [
+                    'id' => $log->id,
+                    'processed_at' => $log->formatted_processed_at,
+                    'user_name' => $log->user?->name ?? 'Unknown',
+                    'total_files' => $log->total_files,
+                    'files_processed' => $log->files_processed,
+                    'files_invalid' => $log->files_invalid,
+                    'files_conflicts' => $log->files_conflicts,
+                    'files_failed' => $log->files_failed,
+                    'success' => $log->success,
+                    'processing_time' => $log->processing_time_sec,
+                    'summary' => $log->summary,
+                    'errors' => $log->errors,
+                    'processing_details' => $log->processing_details
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'logs' => $logs
+        ]);
     }
 
     /**

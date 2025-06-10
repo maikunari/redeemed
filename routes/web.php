@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
     // FTP upload routes
     Route::get('/files/ftp/scan', [FileController::class, 'scanFtpStaging'])->name('files.scan-ftp');
     Route::post('/files/ftp/process', [FileController::class, 'processFtpFiles'])->name('files.process-ftp');
+    Route::get('/files/ftp/history', [FileController::class, 'getFtpProcessingHistory'])->name('files.ftp-history');
     
     // Download code routes
     Route::get('/codes', [DownloadCodeController::class, 'allCodes'])->name('codes.index');

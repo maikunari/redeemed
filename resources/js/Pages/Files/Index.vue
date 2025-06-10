@@ -115,6 +115,18 @@
                             <h3 class="mt-2 text-sm font-medium text-gray-900">No FTP files found</h3>
                             <p class="mt-1 text-sm text-gray-500">Upload files to your FTP staging directory to get started.</p>
                         </div>
+                        
+                        <div class="mt-4 text-right">
+                            <button
+                                @click="openHistoryModal"
+                                class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
+                            >
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                View Processing History
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -423,6 +435,119 @@
             </div>
         </div>
     </Modal>
+
+    <!-- FTP Processing History Modal -->
+    <Modal :show="showHistoryModal" @close="closeHistoryModal" maxWidth="6xl">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-medium text-gray-900">
+                    FTP Processing History
+                </h2>
+                <button @click="closeHistoryModal" class="text-gray-400 hover:text-gray-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Loading State -->
+            <div v-if="loadingHistory" class="text-center py-12">
+                <svg class="animate-spin mx-auto h-8 w-8 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="mt-2 text-sm text-gray-600">Loading processing history...</p>
+            </div>
+
+            <!-- History List -->
+            <div v-else-if="processingHistory.length > 0" class="space-y-4">
+                <div v-for="log in processingHistory" :key="log.id" class="border border-gray-200 rounded-lg p-4">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span :class="[
+                                    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                                    log.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                ]">
+                                    {{ log.success ? 'Success' : 'Failed' }}
+                                </span>
+                                <span class="text-sm text-gray-500">{{ log.processed_at }}</span>
+                                <span class="text-sm text-gray-500">by {{ log.user_name }}</span>
+                                <span v-if="log.processing_time" class="text-sm text-gray-500">({{ log.processing_time }})</span>
+                            </div>
+                            <p class="text-sm text-gray-900 mb-2">{{ log.summary }}</p>
+                            <div v-if="log.errors && log.errors.length > 0" class="text-sm text-red-600">
+                                <p class="font-medium">Errors:</p>
+                                <ul class="list-disc list-inside ml-2">
+                                    <li v-for="error in log.errors" :key="error">{{ error }}</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <button
+                            @click="toggleLogDetails(log.id)"
+                            class="text-gray-400 hover:text-gray-600"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Expanded Details -->
+                    <div v-if="expandedLogs.includes(log.id)" class="mt-4 pt-4 border-t border-gray-100">
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <h4 class="font-medium text-gray-900 mb-2">Processing Statistics</h4>
+                                <ul class="space-y-1 text-gray-600">
+                                    <li>Total files: {{ log.total_files }}</li>
+                                    <li>Successfully processed: {{ log.files_processed }}</li>
+                                    <li>Invalid files deleted: {{ log.files_invalid }}</li>
+                                    <li>Naming conflicts resolved: {{ log.files_conflicts }}</li>
+                                    <li>Failed: {{ log.files_failed }}</li>
+                                </ul>
+                            </div>
+                            <div v-if="log.processing_details">
+                                <h4 class="font-medium text-gray-900 mb-2">File Details</h4>
+                                <div class="max-h-32 overflow-y-auto">
+                                    <div v-if="log.processing_details.processed_files && log.processing_details.processed_files.length > 0" class="mb-2">
+                                        <p class="text-xs font-medium text-green-700">Processed Files:</p>
+                                        <ul class="text-xs text-gray-600">
+                                            <li v-for="file in log.processing_details.processed_files" :key="file.filename">
+                                                {{ file.title }} ({{ file.filename }})
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div v-if="log.processing_details.deleted_files && log.processing_details.deleted_files.length > 0" class="mb-2">
+                                        <p class="text-xs font-medium text-red-700">Deleted Files:</p>
+                                        <ul class="text-xs text-gray-600">
+                                            <li v-for="file in log.processing_details.deleted_files" :key="file.filename">
+                                                {{ file.filename }} ({{ file.reason }})
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No History State -->
+            <div v-else class="text-center py-8 bg-gray-50 rounded-lg">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No processing history</h3>
+                <p class="mt-1 text-sm text-gray-500">Process some FTP files to see the history here.</p>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <SecondaryButton @click="closeHistoryModal">
+                    Close
+                </SecondaryButton>
+            </div>
+        </div>
+    </Modal>
 </template>
 
 <script setup>
@@ -471,6 +596,10 @@ const scanning = ref(false);
 const processing = ref(false);
 const processingResults = ref(null);
 const ftpScanError = ref(null);
+const showHistoryModal = ref(false);
+const loadingHistory = ref(false);
+const processingHistory = ref([]);
+const expandedLogs = ref([]);
 
 // Computed Properties
 const allSelected = computed(() => {
@@ -717,6 +846,39 @@ const redirectToNewFiles = () => {
     closeFtpModal();
     // Refresh the entire page to show new files
     window.location.reload();
+};
+
+const openHistoryModal = async () => {
+    showHistoryModal.value = true;
+    await loadProcessingHistory();
+};
+
+const closeHistoryModal = () => {
+    showHistoryModal.value = false;
+    expandedLogs.value = [];
+};
+
+const loadProcessingHistory = async () => {
+    loadingHistory.value = true;
+    
+    try {
+        const response = await axios.get(route('files.ftp-history'));
+        processingHistory.value = response.data.logs || [];
+    } catch (error) {
+        console.error('Failed to load processing history:', error);
+        processingHistory.value = [];
+    } finally {
+        loadingHistory.value = false;
+    }
+};
+
+const toggleLogDetails = (logId) => {
+    const index = expandedLogs.value.indexOf(logId);
+    if (index > -1) {
+        expandedLogs.value.splice(index, 1);
+    } else {
+        expandedLogs.value.push(logId);
+    }
 };
 
 // Auto-scan FTP directory on page load
