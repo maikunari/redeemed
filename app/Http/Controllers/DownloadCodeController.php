@@ -14,6 +14,7 @@ use League\Csv\Writer;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Spatie\Browsershot\Browsershot;
+use App\Models\Settings;
 
 class DownloadCodeController extends Controller
 {
@@ -243,11 +244,17 @@ class DownloadCodeController extends Controller
 
         $safeTitle = str_replace(['/', '\\', '?', '%', '*', ':', '|', '"', '<', '>', '.', ','], '-', $file->title);
         
+        // Get settings for card customization
+        $settings = Settings::first();
+        
         // Generate HTML from Blade template
         $html = view('pdf.business-cards-avery', [
             'codes' => $codesWithQr,
             'app_name' => config('app.name'),
-            'website_url' => config('app.url'),
+            'website_url' => $settings->card_website_url ?? config('app.url'),
+            'brand_name' => $settings->card_brand_name ?? $settings->site_name ?? config('app.name'),
+            'card_instructions' => $settings->card_instructions ?? 'Enter your download code at the website above to access your music.',
+            'qr_instruction' => $settings->card_qr_instruction ?? 'Scan to Download',
         ])->render();
 
         // Create PDF using Browsershot for better rendering

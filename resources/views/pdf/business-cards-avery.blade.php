@@ -150,44 +150,70 @@
         /* QR Code Back Side */
         .back-card {
             background: white;
-            justify-content: center;
-            align-items: center;
+            justify-content: flex-start;
         }
         
-        .qr-container {
+        .back-header {
             text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            border-bottom: 1pt solid #000000;
+            padding: 4pt 0 4pt 0;
+            margin-bottom: 8pt;
+        }
+        
+        .back-content {
             flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 0 6pt;
+            border: 1pt solid #000000;
+            margin: 0 0 8pt 0;
+        }
+        
+        .qr-section {
+            width: 45%;
+            text-align: center;
         }
         
         .qr-code {
-            width: 1.3in;
-            height: 1.3in;
-            margin: 0 auto 6pt auto;
+            width: 0.9in;
+            height: 0.9in;
+            margin: 0 auto;
             display: block;
         }
         
-        .qr-instructions {
-            font-size: 8pt;
-            color: #000000;
-            font-weight: bold;
-            margin: 0 0 2pt 0;
+        .info-section {
+            width: 55%;
+            padding-left: 8pt;
+            text-align: center;
         }
         
-        .qr-subtext {
-            font-size: 6pt;
+        .download-code-back {
+            font-size: 14pt;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            color: #000000;
+            margin: 0 0 4pt 0;
+            letter-spacing: 0.5pt;
+        }
+        
+        .website-back {
+            font-size: 8pt;
             color: #000000;
             margin: 0;
+            font-weight: bold;
+        }
+        
+        .qr-instructions {
+            font-size: 7pt;
+            color: #000000;
+            font-weight: bold;
+            margin: 2pt 0 0 0;
         }
         
         .brand-footer {
             text-align: center;
             font-size: 6pt;
             color: #000000;
-            margin-top: auto;
             padding-top: 3pt;
             border-top: 0.5pt solid #000000;
         }
@@ -208,10 +234,10 @@
             @foreach($codes->chunk(10) as $pageChunk)
                 @foreach($pageChunk as $codeData)
                     <div class="business-card">
-                        <div class="card-header">
-                            <div class="brand-name">{{ $app_name ?? 'Redeemed' }}</div>
-                            <div class="tagline">Digital Content Download</div>
-                        </div>
+                                <div class="card-header">
+            <div class="brand-name">{{ $brand_name ?? 'Redeemed' }}</div>
+            <div class="tagline">Digital Content Download</div>
+        </div>
                         
                         <div class="card-content">
                             @if($codeData['file_title'])
@@ -224,8 +250,8 @@
                         </div>
                         
                         <div class="card-footer">
-                            <div class="website-url">{{ parse_url($website_url ?? config('app.url'), PHP_URL_HOST) }}/redeem</div>
-                            <div class="instructions">Enter code above to download</div>
+                                        <div class="website-url">{{ parse_url($website_url ?? config('app.url'), PHP_URL_HOST) }}/redeem</div>
+            <div class="instructions">{{ $card_instructions ?? 'Enter code above to download' }}</div>
                             @if($codeData['expires_at'])
                                 <div class="expires-info">Expires: {{ $codeData['expires_at'] }}</div>
                             @endif
@@ -253,17 +279,26 @@
             @foreach($codes->chunk(10) as $pageChunk)
                 @foreach($pageChunk as $codeData)
                     <div class="business-card back-card">
-                        <div class="qr-container">
-                            <img src="data:image/svg+xml;base64,{{ $codeData['qr_code'] }}" 
-                                 alt="QR Code for {{ $codeData['code'] }}" 
-                                 class="qr-code">
+                        <div class="back-header">
+                            <div class="brand-name">{{ $brand_name ?? 'Redeemed' }}</div>
+                        </div>
+                        
+                        <div class="back-content">
+                            <div class="qr-section">
+                                <img src="data:image/svg+xml;base64,{{ $codeData['qr_code'] }}" 
+                                     alt="QR Code for {{ $codeData['code'] }}" 
+                                     class="qr-code">
+                                <div class="qr-instructions">{{ $qr_instruction ?? 'Scan to Download' }}</div>
+                            </div>
                             
-                            <div class="qr-instructions">Scan to Download</div>
-                            <div class="qr-subtext">Or visit website and enter code</div>
+                            <div class="info-section">
+                                <div class="download-code-back">{{ $codeData['code'] }}</div>
+                                <div class="website-back">{{ parse_url($website_url ?? config('app.url'), PHP_URL_HOST) }}/redeem</div>
+                            </div>
                         </div>
                         
                         <div class="brand-footer">
-                            {{ $app_name ?? 'Redeemed' }} - Digital Content Distribution
+                            {{ $brand_name ?? 'Redeemed' }}
                         </div>
                     </div>
                 @endforeach
