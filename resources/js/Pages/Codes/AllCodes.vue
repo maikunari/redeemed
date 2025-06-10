@@ -15,68 +15,108 @@
                 <!-- Control Card -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6 text-gray-900">
-                        <!-- File Selection and Generate Button -->
-                        <div class="flex items-center justify-between mb-6">
-                            <div class="w-1/2 max-w-lg">
-                                <label for="file-select" class="block text-sm font-medium text-gray-700 mb-1">Select File</label>
-                                <select
-                                    id="file-select"
-                                    v-model="selectedFileId"
-                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                >
-                                    <option value="">All Files</option>
-                                    <option v-for="file in files" :key="file.id" :value="file.id">
-                                        {{ file.title }}
-                                    </option>
-                                </select>
+                        <!-- Main Control Row -->
+                        <div class="grid grid-cols-2 gap-8 mb-6 items-center">
+                            <!-- Left Side: File Selection and Search -->
+                            <div class="space-y-4">
+                                <!-- File Selection -->
+                                <div>
+                                    <label for="file-select" class="block text-sm font-medium text-gray-700 mb-1">Select File</label>
+                                    <select
+                                        id="file-select"
+                                        v-model="selectedFileId"
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                    >
+                                        <option value="">All Files</option>
+                                        <option v-for="file in files" :key="file.id" :value="file.id">
+                                            {{ file.title }}
+                                        </option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Search -->
+                                <div>
+                                    <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search Codes</label>
+                                    <input
+                                        id="search"
+                                        type="text"
+                                        v-model="search"
+                                        placeholder="Search codes..."
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        @input="debouncedSearch"
+                                    >
+                                </div>
                             </div>
-                            <div class="flex space-x-4">
+
+                            <!-- Right Side: Action Buttons -->
+                            <div class="space-y-4">
+                                <!-- Generate Codes -->
                                 <button
                                     type="button"
                                     @click="openGenerateModal"
                                     :disabled="!selectedFileId"
-                                    class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    class="w-full inline-flex justify-center items-center py-2.5 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
                                     Generate Codes
                                 </button>
-                                <a
-                                    :href="route('codes.export', selectedFileId)"
-                                    :class="[
-                                        'inline-flex items-center px-4 py-2 rounded-md font-semibold text-xs uppercase tracking-widest transition ease-in-out duration-150',
-                                        selectedFileId ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                    ]"
-                                    :disabled="!selectedFileId"
-                                >
-                                    Export CSV
-                                </a>
-                                <button
-                                    @click="exportCards"
-                                    :disabled="!selectedFileId || exportingCards"
-                                    :class="[
-                                        'inline-flex items-center px-4 py-2 rounded-md font-semibold text-xs uppercase tracking-widest transition ease-in-out duration-150',
-                                        selectedFileId ? 'bg-indigo-600 border border-transparent text-white hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2' : 'bg-gray-300 text-gray-500 cursor-not-allowed',
-                                        'disabled:opacity-50'
-                                    ]"
-                                >
-                                    <svg v-if="exportingCards" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    {{ exportingCards ? 'Generating...' : 'Export Cards' }}
-                                </button>
-                            </div>
-                        </div>
 
-                        <!-- Search and Filters -->
-                        <div class="mb-6">
-                            <div class="w-1/2 max-w-lg">
-                                <input
-                                    type="text"
-                                    v-model="search"
-                                    placeholder="Search codes..."
-                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                    @input="debouncedSearch"
-                                >
+                                <!-- Export Buttons Row -->
+                                <div class="grid grid-cols-2 gap-3">
+                                    <!-- Export Cards -->
+                                    <button
+                                        @click="exportCards"
+                                        :disabled="!selectedFileId || exportingCards"
+                                        :class="[
+                                            'inline-flex items-center justify-center px-3 py-2.5 rounded-md font-medium text-sm transition ease-in-out duration-150',
+                                            selectedFileId ? 'bg-indigo-600 border border-transparent text-white hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2' : 'bg-gray-300 text-gray-500 cursor-not-allowed',
+                                            'disabled:opacity-50'
+                                        ]"
+                                    >
+                                        <svg v-if="exportingCards" class="animate-spin -ml-1 mr-1.5 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <svg v-else class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                        </svg>
+                                        {{ exportingCards ? 'Generating...' : 'Export Cards' }}
+                                    </button>
+
+                                    <!-- Export CSV -->
+                                    <a
+                                        :href="route('codes.export', selectedFileId)"
+                                        :class="[
+                                            'inline-flex items-center justify-center px-3 py-2.5 rounded-md font-medium text-sm transition ease-in-out duration-150',
+                                            selectedFileId ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        ]"
+                                        :disabled="!selectedFileId"
+                                    >
+                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+                                        </svg>
+                                        Export CSV
+                                    </a>
+                                </div>
+
+                                <!-- Print Shop Instructions Link -->
+                                <div class="text-center pt-1">
+                                    <a
+                                        href="/print-shop-instructions.html"
+                                        target="_blank"
+                                        class="inline-flex items-center px-3 py-2 text-sm text-indigo-600 hover:text-indigo-500 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors duration-150"
+                                    >
+                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        Print Shop Instructions
+                                        <svg class="w-3 h-3 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                        </svg>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
