@@ -854,7 +854,7 @@ const redirectToNewFiles = async () => {
         if (filesListSection.value) {
             // Get the position of the files section
             const rect = filesListSection.value.getBoundingClientRect();
-            const offset = window.pageYOffset + rect.top - 100; // 100px offset to show more of the card
+            const offset = window.pageYOffset + rect.top - 200; // 200px offset to show more of the card
             
             // Smooth scroll to the calculated position
             window.scrollTo({
