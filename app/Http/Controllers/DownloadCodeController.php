@@ -13,6 +13,7 @@ use Illuminate\Validation\ValidationException;
 use League\Csv\Writer;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Spatie\Browsershot\Browsershot;
 
 class DownloadCodeController extends Controller
 {
@@ -242,21 +243,29 @@ class DownloadCodeController extends Controller
 
         $safeTitle = str_replace(['/', '\\', '?', '%', '*', ':', '|', '"', '<', '>', '.', ','], '-', $file->title);
         
-        // Create Avery 5371 template PDF
-        $averyPdf = Pdf::loadView('pdf.business-cards-avery', [
+        // Generate HTML from Blade template
+        $html = view('pdf.business-cards-avery', [
             'codes' => $codesWithQr,
             'app_name' => config('app.name'),
             'website_url' => config('app.url'),
-        ]);
-        
-        $averyPdf->setPaper([0, 0, 612, 792], 'portrait')
-                ->setOptions([
-                    'dpi' => 300,
-                    'defaultFont' => 'helvetica',
-                    'isRemoteEnabled' => true,
-                ]);
+        ])->render();
 
-        return $averyPdf->download("{$safeTitle}-cards-avery-({$codes->count()}).pdf");
+        // Create PDF using Browsershot for better rendering
+        $pdfPath = storage_path("app/temp/{$safeTitle}-cards-avery-({$codes->count()}).pdf");
+        
+        // Ensure temp directory exists
+        if (!file_exists(dirname($pdfPath))) {
+            mkdir(dirname($pdfPath), 0755, true);
+        }
+
+        Browsershot::html($html)
+            ->setNodeBinary('/opt/homebrew/bin/node')
+            ->setNpmBinary('/opt/homebrew/bin/npm')
+            ->format('Letter')
+            ->margins(36, 27, 36, 27)  // 0.5in top/bottom, 0.375in left/right for better centering
+            ->savePdf($pdfPath);
+
+        return response()->download($pdfPath)->deleteFileAfterSend(true);
     }
 
     /**
