@@ -20,7 +20,16 @@ class File extends Model implements HasMedia
     {
         $this->addMediaCollection('files')
             ->singleFile()
-            ->acceptsMimeTypes(['audio/mpeg', 'application/zip']);
+            ->acceptsMimeTypes([
+                'audio/mpeg',           // Standard MP3 MIME type
+                'audio/mp3',            // Alternative MP3 MIME type
+                'audio/mpeg3',          // Another MP3 variant
+                'audio/x-mpeg-3',       // Legacy MP3 MIME type
+                'application/octet-stream', // Generic binary file type (fallback for MP3s)
+                'application/zip',       // ZIP files
+                'application/x-zip',     // Alternative ZIP MIME type
+                'application/x-zip-compressed' // Another ZIP variant
+            ]);
 
         $this->addMediaCollection('thumbnails')
             ->singleFile()
