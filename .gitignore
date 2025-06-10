@@ -26,3 +26,10 @@ yarn-error.log
 # Ignore all .md files except README.md
 *.md
 !README.md
+!ftp-upload-implementation-plan.md
+
+# Ignore FTP staging content but keep directory structure
+/storage/app/ftp-staging/*
+!/storage/app/ftp-staging/.gitkeep
+/storage/app/ftp-processed/*
+!/storage/app/ftp-processed/.gitkeep
