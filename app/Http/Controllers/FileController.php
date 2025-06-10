@@ -193,7 +193,23 @@ class FileController extends Controller
                 ], 500);
             }
             
-            return response()->json($result);
+            // Map the data structure to match frontend expectations
+            $mappedFiles = collect($result['files'] ?? [])->map(function ($file) {
+                return [
+                    'filename' => $file['filename'],
+                    'title' => $file['final_title'],
+                    'size' => $file['size_formatted'],
+                    'type' => $file['extension'] === 'mp3' ? 'audio' : 'archive',
+                    'valid' => $file['is_valid'],
+                    'error' => $file['error']
+                ];
+            })->toArray();
+            
+            return response()->json([
+                'success' => $result['success'],
+                'count' => $result['count'],
+                'files' => $mappedFiles
+            ]);
             
         } catch (\Exception $e) {
             return response()->json([
@@ -213,18 +229,21 @@ class FileController extends Controller
             'files.*' => 'required|string'
         ]);
 
+        $filenames = $request->input('files', []);
+        
         $results = [
             'success' => true,
             'processed' => [],
             'failed' => [],
             'deleted' => [],
-            'total' => count($request->files)
+            'conflicts' => 0,
+            'total' => count($filenames)
         ];
 
         $stagingPath = storage_path('app/ftp-staging');
         $processedPath = storage_path('app/ftp-processed');
 
-        foreach ($request->files as $filename) {
+        foreach ($filenames as $filename) {
             try {
                 $filePath = $stagingPath . '/' . $filename;
                 
@@ -252,16 +271,21 @@ class FileController extends Controller
                 // Generate unique title
                 $baseTitle = pathinfo($filename, PATHINFO_FILENAME);
                 $finalTitle = $this->generateUniqueTitle($baseTitle);
+                
+                // Track conflicts
+                if ($finalTitle !== $baseTitle) {
+                    $results['conflicts']++;
+                }
 
                 // Create File model
                 $fileModel = File::create(['title' => $finalTitle]);
 
-                // Move file to Spatie media library
-                $fileModel->addMedia($filePath)->toMediaCollection('files');
-
-                // Move original to processed folder
+                // Copy file to processed folder first (before media library consumes it)
                 $processedFilePath = $processedPath . '/' . date('Y-m-d_H-i-s_') . $filename;
-                rename($filePath, $processedFilePath);
+                copy($filePath, $processedFilePath);
+
+                // Move file to Spatie media library (this will consume the original file)
+                $fileModel->addMedia($filePath)->toMediaCollection('files');
 
                 $results['processed'][] = [
                     'filename' => $filename,
@@ -270,6 +294,10 @@ class FileController extends Controller
                 ];
 
             } catch (\Exception $e) {
+                // Log the error for debugging
+                \Log::error('FTP Processing Error for ' . $filename . ': ' . $e->getMessage());
+                \Log::error('Stack trace: ' . $e->getTraceAsString());
+                
                 $results['failed'][] = [
                     'filename' => $filename,
                     'error' => $e->getMessage()
@@ -277,10 +305,21 @@ class FileController extends Controller
             }
         }
 
-        // Determine overall success
-        $results['success'] = count($results['failed']) === 0;
+        // Map results to match frontend expectations
+        $response = [
+            'success' => count($results['failed']) === 0,
+            'processed' => count($results['processed']),
+            'invalid' => count($results['deleted']),
+            'conflicts' => $results['conflicts'],
+            'errors' => collect($results['failed'])->pluck('error')->toArray(),
+            'details' => [
+                'processed_files' => $results['processed'],
+                'deleted_files' => $results['deleted'],
+                'failed_files' => $results['failed']
+            ]
+        ];
 
-        return response()->json($results);
+        return response()->json($response);
     }
 
     /**
