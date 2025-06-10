@@ -205,7 +205,7 @@ class DownloadCodeController extends Controller
             return [
                 'code' => $code->code,
                 'file_title' => $code->file->title,
-                'redemption_url' => route('codes.redeem-form', ['code' => $code->code]),
+                'redemption_url' => route('codes.show-form', ['code' => $code->code]),
                 'qr_code' => $this->generateQrCodeData($code),
                 'expires_at' => $code->expires_at ? $code->expires_at->format('M j, Y') : null,
                 'usage_info' => $code->usage_count . '/' . $code->usage_limit . ' uses',
@@ -251,7 +251,7 @@ class DownloadCodeController extends Controller
      */
     protected function generateQrCodeData(DownloadCode $code)
     {
-        $redemptionUrl = route('codes.redeem-form', ['code' => $code->code]);
+        $redemptionUrl = route('codes.show-form', ['code' => $code->code]);
         
         return base64_encode(
             QrCode::format('png')
