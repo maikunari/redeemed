@@ -51,7 +51,8 @@ const emit = defineEmits(['sent']);
 const form = useForm({
     name: '',
     email: '',
-    message: ''
+    message: '',
+    download_code: ''
 });
 
 const codeDigits = ref(Array(6).fill(''));
@@ -93,18 +94,26 @@ function handleDigitPaste(e) {
     });
 }
 
-// Include code in form payload
-form.defaults({ download_code: '' });
-
-watch(codeDigits, (val) => {
-    form.download_code = val.join('');
-});
+// Watch for changes in code digits and update form
+watch(codeDigits, (newDigits) => {
+    form.download_code = newDigits.join('');
+}, { deep: true, immediate: true });
 
 function submit() {
+    // Debug: Log what we're sending
+    console.log('Submitting contact form with data:', {
+        name: form.name,
+        email: form.email,
+        message: form.message,
+        download_code: form.download_code,
+        codeDigits: codeDigits.value
+    });
+    
     form.post(route('support.send'), {
         preserveScroll: true,
         onSuccess: () => {
             form.reset();
+            codeDigits.value = Array(6).fill(''); // Reset code digits
             emit('sent');
         }
     });

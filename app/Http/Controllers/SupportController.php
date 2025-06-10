@@ -14,7 +14,7 @@ class SupportController extends Controller
             'name'    => ['required', 'string', 'max:255'],
             'email'   => ['required', 'email', 'max:255'],
             'message' => ['required', 'string'],
-            'download_code' => ['nullable','regex:/^[2-9]{6}$/'],
+            'download_code' => ['nullable', 'string', 'max:6'],
         ]);
 
         // Send email to support email from settings
@@ -22,11 +22,25 @@ class SupportController extends Controller
             $settings = \App\Models\Settings::first();
             $supportEmail = $settings?->support_email ?? config('mail.from.address');
             
-            $body = $data['message'];
-            if (!empty($data['download_code'])) {
-                $body .= "\n\nDownload code: " . $data['download_code'];
+            // Format email body with clear sections
+            $body = "SUPPORT REQUEST\n";
+            $body .= "================\n\n";
+            
+            $body .= "FROM:\n";
+            $body .= "Name: {$data['name']}\n";
+            $body .= "Email: {$data['email']}\n\n";
+            
+            if (!empty($data['download_code']) && strlen($data['download_code']) === 6) {
+                $body .= "DOWNLOAD CODE:\n";
+                $body .= $data['download_code'] . "\n\n";
             }
-            $body .= "\n\nFrom: {$data['name']} <{$data['email']}>";
+            
+            $body .= "MESSAGE:\n";
+            $body .= "--------\n";
+            $body .= $data['message'] . "\n\n";
+            
+            $body .= "================\n";
+            $body .= "Sent from contact form";
 
             Mail::raw($body, function ($msg) use ($supportEmail, $data) {
                 $msg->to($supportEmail)
