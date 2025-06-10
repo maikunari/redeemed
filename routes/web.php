@@ -42,6 +42,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/files/{file}/codes', [DownloadCodeController::class, 'index'])->name('codes.file');
     Route::post('/files/{file}/codes', [DownloadCodeController::class, 'store'])->name('codes.store');
     Route::get('/files/{file}/codes/export', [DownloadCodeController::class, 'export'])->name('codes.export');
+Route::post('/files/{file}/codes/export-cards', [DownloadCodeController::class, 'exportCards'])->name('codes.export-cards');
     Route::get('/codes/{code}/qr', [DownloadCodeController::class, 'generateQr'])->name('codes.qr');
     Route::delete('/codes/{code}', [DownloadCodeController::class, 'destroy'])->name('codes.destroy');
     Route::patch('/codes/{code}/renew', [DownloadCodeController::class, 'renew'])->name('codes.renew');

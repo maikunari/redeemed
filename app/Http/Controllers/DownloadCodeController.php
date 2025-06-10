@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Validation\ValidationException;
 use League\Csv\Writer;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class DownloadCodeController extends Controller
 {
@@ -176,6 +177,88 @@ class DownloadCodeController extends Controller
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"{$safeTitle} ({$file->codes->count()}).csv\"",
         ]);
+    }
+
+    /**
+     * Export download codes as PDF business cards
+     */
+    public function exportCards(Request $request, File $file)
+    {
+        $request->validate([
+            'codes' => 'nullable|array',
+            'codes.*' => 'exists:download_codes,id',
+        ]);
+
+        // Get codes to export (selected codes or all codes for the file)
+        if ($request->has('codes') && !empty($request->codes)) {
+            $codes = $file->codes()->whereIn('id', $request->codes)->get();
+        } else {
+            $codes = $file->codes;
+        }
+
+        if ($codes->isEmpty()) {
+            return redirect()->back()->withErrors(['codes' => 'No codes found to export.']);
+        }
+
+        // Generate QR codes for each download code
+        $codesWithQr = $codes->map(function ($code) {
+            return [
+                'code' => $code->code,
+                'file_title' => $code->file->title,
+                'redemption_url' => route('codes.redeem-form', ['code' => $code->code]),
+                'qr_code' => $this->generateQrCodeData($code),
+                'expires_at' => $code->expires_at ? $code->expires_at->format('M j, Y') : null,
+                'usage_info' => $code->usage_count . '/' . $code->usage_limit . ' uses',
+            ];
+        });
+
+        // Generate front side PDF
+        $frontPdf = Pdf::loadView('pdf.business-cards-front', [
+            'codes' => $codesWithQr,
+            'app_name' => config('app.name'),
+            'website_url' => config('app.url'),
+        ]);
+        
+        // Configure PDF settings for business cards
+        $frontPdf->setPaper([0, 0, 612, 792], 'portrait') // 8.5" x 11" in points
+               ->setOptions([
+                   'dpi' => 300,
+                   'defaultFont' => 'helvetica',
+                   'isRemoteEnabled' => true,
+               ]);
+
+        // Generate back side PDF
+        $backPdf = Pdf::loadView('pdf.business-cards-back', [
+            'codes' => $codesWithQr,
+            'app_name' => config('app.name'),
+        ]);
+        
+        $backPdf->setPaper([0, 0, 612, 792], 'portrait')
+               ->setOptions([
+                   'dpi' => 300,
+                   'defaultFont' => 'helvetica',
+                   'isRemoteEnabled' => true,
+               ]);
+
+        $safeTitle = str_replace(['/', '\\', '?', '%', '*', ':', '|', '"', '<', '>', '.', ','], '-', $file->title);
+        
+        // For now, return the front PDF (we'll enhance this later to handle both sides)
+        return $frontPdf->download("{$safeTitle}-cards-front-({$codes->count()}).pdf");
+    }
+
+    /**
+     * Generate QR code data for a download code
+     */
+    protected function generateQrCodeData(DownloadCode $code)
+    {
+        $redemptionUrl = route('codes.redeem-form', ['code' => $code->code]);
+        
+        return base64_encode(
+            QrCode::format('png')
+                  ->size(200)
+                  ->errorCorrection('M')
+                  ->generate($redemptionUrl)
+        );
     }
 
     /**
