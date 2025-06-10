@@ -100,7 +100,7 @@
                 @foreach($chunk as $codeData)
                     <div class="business-card">
                         <div class="qr-container">
-                            <img src="data:image/png;base64,{{ $codeData['qr_code'] }}" 
+                            <img src="data:image/svg+xml;base64,{{ $codeData['qr_code'] }}" 
                                  alt="QR Code for {{ $codeData['code'] }}" 
                                  class="qr-code">
                             

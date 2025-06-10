@@ -242,8 +242,21 @@ class DownloadCodeController extends Controller
 
         $safeTitle = str_replace(['/', '\\', '?', '%', '*', ':', '|', '"', '<', '>', '.', ','], '-', $file->title);
         
-        // For now, return the front PDF (we'll enhance this later to handle both sides)
-        return $frontPdf->download("{$safeTitle}-cards-front-({$codes->count()}).pdf");
+        // Create Avery 5371 template PDF
+        $averyPdf = Pdf::loadView('pdf.business-cards-avery', [
+            'codes' => $codesWithQr,
+            'app_name' => config('app.name'),
+            'website_url' => config('app.url'),
+        ]);
+        
+        $averyPdf->setPaper([0, 0, 612, 792], 'portrait')
+                ->setOptions([
+                    'dpi' => 300,
+                    'defaultFont' => 'helvetica',
+                    'isRemoteEnabled' => true,
+                ]);
+
+        return $averyPdf->download("{$safeTitle}-cards-avery-({$codes->count()}).pdf");
     }
 
     /**
@@ -254,7 +267,7 @@ class DownloadCodeController extends Controller
         $redemptionUrl = route('codes.show-form', ['code' => $code->code]);
         
         return base64_encode(
-            QrCode::format('png')
+            QrCode::format('svg')
                   ->size(200)
                   ->errorCorrection('M')
                   ->generate($redemptionUrl)
