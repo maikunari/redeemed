@@ -59,6 +59,65 @@
                     </div>
                 </div>
 
+                <!-- FTP Management Card -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                    <div class="p-6 text-gray-900">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900">FTP Bulk Upload</h3>
+                                <p class="text-sm text-gray-600">Process files from your FTP staging directory</p>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span v-if="ftpFileCount !== null" class="text-sm text-gray-500">
+                                    {{ ftpFileCount }} file{{ ftpFileCount !== 1 ? 's' : '' }} available
+                                </span>
+                                <button
+                                    @click="scanFtpStaging"
+                                    :disabled="scanning"
+                                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                                >
+                                    <svg v-if="scanning" class="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    {{ scanning ? 'Scanning...' : 'Scan FTP Directory' }}
+                                </button>
+                                <button
+                                    v-if="ftpFiles.length > 0"
+                                    @click="showFtpModal = true"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                >
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                    </svg>
+                                    Process Files
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div v-if="ftpScanError" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                            <span class="block sm:inline">{{ ftpScanError }}</span>
+                            <button @click="ftpScanError = null" class="absolute top-0 bottom-0 right-0 px-4 py-3">
+                                <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                    <title>Close</title>
+                                    <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div v-if="ftpFileCount === 0" class="text-center py-8 bg-gray-50 rounded-lg">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2V5a2 2 0 012-2h14a2 2 0 012 2v2" />
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">No FTP files found</h3>
+                            <p class="mt-1 text-sm text-gray-500">Upload files to your FTP staging directory to get started.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Files List Card -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
@@ -208,10 +267,166 @@
             </div>
         </div>
     </Modal>
+
+    <!-- FTP Processing Modal -->
+    <Modal :show="showFtpModal" @close="closeFtpModal" maxWidth="4xl">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-medium text-gray-900">
+                    Process FTP Files
+                </h2>
+                <button @click="closeFtpModal" class="text-gray-400 hover:text-gray-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Processing State -->
+            <div v-if="processing" class="text-center py-12">
+                <svg class="animate-spin mx-auto h-12 w-12 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <h3 class="mt-4 text-lg font-medium text-gray-900">Processing Files...</h3>
+                <p class="mt-2 text-sm text-gray-600">Please wait while we process the selected files.</p>
+            </div>
+
+            <!-- Results State -->
+            <div v-else-if="processingResults" class="space-y-6">
+                <div class="bg-green-50 border border-green-200 rounded-md p-4">
+                    <div class="flex">
+                        <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-green-800">Processing Complete</h3>
+                            <div class="mt-2 text-sm text-green-700">
+                                <p>Successfully processed {{ processingResults.processed }} file(s)</p>
+                                <p v-if="processingResults.invalid > 0">Deleted {{ processingResults.invalid }} invalid file(s)</p>
+                                <p v-if="processingResults.conflicts > 0">Resolved {{ processingResults.conflicts }} naming conflict(s)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="processingResults.errors && processingResults.errors.length > 0" class="bg-red-50 border border-red-200 rounded-md p-4">
+                    <div class="flex">
+                        <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">Errors Occurred</h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li v-for="error in processingResults.errors" :key="error">{{ error }}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <SecondaryButton @click="closeFtpModal">
+                        Close
+                    </SecondaryButton>
+                    <button
+                        @click="redirectToNewFiles"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                        View New Files
+                    </button>
+                </div>
+            </div>
+
+            <!-- File Selection State -->
+            <div v-else class="space-y-6">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm text-gray-600">
+                        Select files to process from your FTP staging directory:
+                    </p>
+                    <div class="flex items-center space-x-4">
+                        <label class="flex items-center">
+                            <input
+                                type="checkbox"
+                                :checked="allSelected"
+                                @change="toggleSelectAll"
+                                class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                            >
+                            <span class="ml-2 text-sm text-gray-700">Select All</span>
+                        </label>
+                        <span class="text-sm text-gray-500">
+                            {{ selectedFtpFiles.length }} of {{ ftpFiles.length }} selected
+                        </span>
+                    </div>
+                </div>
+
+                <div v-if="ftpFiles.length === 0" class="text-center py-8 bg-gray-50 rounded-lg">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2V5a2 2 0 012-2h14a2 2 0 012 2v2" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No files available</h3>
+                    <p class="mt-1 text-sm text-gray-500">Scan the FTP directory first to see available files.</p>
+                </div>
+
+                <div v-else class="max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
+                    <div class="divide-y divide-gray-200">
+                        <div
+                            v-for="file in ftpFiles"
+                            :key="file.filename"
+                            class="flex items-center justify-between p-4 hover:bg-gray-50"
+                        >
+                            <div class="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    :value="file.filename"
+                                    v-model="selectedFtpFiles"
+                                    class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                >
+                                <div class="ml-4">
+                                    <div class="flex items-center">
+                                        <svg v-if="file.type === 'audio'" class="h-5 w-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                        </svg>
+                                        <svg v-else class="h-5 w-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                        </svg>
+                                        <p class="text-sm font-medium text-gray-900">{{ file.title }}</p>
+                                    </div>
+                                    <p class="text-sm text-gray-500">{{ file.filename }} • {{ file.size }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span :class="[
+                                    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                                    file.valid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                ]">
+                                    {{ file.valid ? 'Valid' : 'Invalid' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <SecondaryButton @click="closeFtpModal">
+                        Cancel
+                    </SecondaryButton>
+                    <button
+                        @click="processFtpFiles"
+                        :disabled="selectedFtpFiles.length === 0"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Process {{ selectedFtpFiles.length }} File{{ selectedFtpFiles.length !== 1 ? 's' : '' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </Modal>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import FileUploader from '@/Components/FileUploader.vue';
@@ -219,6 +434,7 @@ import GenerateCodeModal from '@/Components/GenerateCodeModal.vue';
 import Modal from '@/Components/Modal.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
+import axios from 'axios';
 
 const props = defineProps({
     files: {
@@ -244,6 +460,21 @@ const form = useForm({
     title: '',
     file: null,
     thumbnail: null,
+});
+
+// FTP Management State
+const ftpFiles = ref([]);
+const ftpFileCount = ref(null);
+const selectedFtpFiles = ref([]);
+const showFtpModal = ref(false);
+const scanning = ref(false);
+const processing = ref(false);
+const processingResults = ref(null);
+const ftpScanError = ref(null);
+
+// Computed Properties
+const allSelected = computed(() => {
+    return ftpFiles.value.length > 0 && selectedFtpFiles.value.length === ftpFiles.value.length;
 });
 
 const handleFileSelected = (file) => {
@@ -420,4 +651,76 @@ const replaceThumbnail = async (event, fileId) => {
 const clearError = () => {
     form.clearErrors();
 };
+
+// FTP Management Methods
+const scanFtpStaging = async () => {
+    scanning.value = true;
+    ftpScanError.value = null;
+    
+    try {
+        const response = await axios.get(route('files.scan-ftp'));
+        ftpFiles.value = response.data.files || [];
+        ftpFileCount.value = ftpFiles.value.length;
+        selectedFtpFiles.value = [];
+    } catch (error) {
+        ftpScanError.value = error.response?.data?.message || 'Failed to scan FTP directory';
+        ftpFiles.value = [];
+        ftpFileCount.value = 0;
+    } finally {
+        scanning.value = false;
+    }
+};
+
+const toggleSelectAll = () => {
+    if (allSelected.value) {
+        selectedFtpFiles.value = [];
+    } else {
+        selectedFtpFiles.value = ftpFiles.value.map(file => file.filename);
+    }
+};
+
+const closeFtpModal = () => {
+    showFtpModal.value = false;
+    processing.value = false;
+    processingResults.value = null;
+    selectedFtpFiles.value = [];
+};
+
+const processFtpFiles = async () => {
+    if (selectedFtpFiles.value.length === 0) return;
+    
+    processing.value = true;
+    
+    try {
+        const response = await axios.post(route('files.process-ftp'), {
+            files: selectedFtpFiles.value
+        });
+        
+        processingResults.value = response.data;
+        
+        // Refresh FTP file list after processing
+        await scanFtpStaging();
+        
+    } catch (error) {
+        processingResults.value = {
+            processed: 0,
+            invalid: 0,
+            conflicts: 0,
+            errors: [error.response?.data?.message || 'Failed to process files']
+        };
+    } finally {
+        processing.value = false;
+    }
+};
+
+const redirectToNewFiles = () => {
+    closeFtpModal();
+    // Refresh the entire page to show new files
+    window.location.reload();
+};
+
+// Auto-scan FTP directory on page load
+onMounted(() => {
+    scanFtpStaging();
+});
 </script> 
