@@ -17,17 +17,22 @@ class SupportController extends Controller
             'download_code' => ['nullable','regex:/^[2-9]{6}$/'],
         ]);
 
-        // Example: send email to site admin; replace as needed.
+        // Send email to support email from settings
         try {
+            $settings = \App\Models\Settings::first();
+            $supportEmail = $settings?->support_email ?? config('mail.from.address');
+            
             $body = $data['message'];
             if (!empty($data['download_code'])) {
                 $body .= "\n\nDownload code: " . $data['download_code'];
             }
             $body .= "\n\nFrom: {$data['name']} <{$data['email']}>";
 
-            Mail::raw($body, function ($msg) {
-                $msg->to(config('mail.from.address'))
-                    ->subject('Support Request');
+            Mail::raw($body, function ($msg) use ($supportEmail, $data) {
+                $msg->to($supportEmail)
+                    ->from(config('mail.from.address'), $data['name'] . ' (via ' . config('mail.from.name') . ')')
+                    ->replyTo($data['email'], $data['name'])
+                    ->subject('Support Request from ' . $data['name']);
             });
         } catch (\Throwable $e) {
             Log::error('Support mail failed', ['error' => $e->getMessage()]);
