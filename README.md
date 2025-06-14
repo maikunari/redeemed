@@ -285,3 +285,46 @@ Use the admin account to log in and manage the site.
 
 touch storage/logs/laravel.log
 chmod 664 storage/logs/laravel.log 
+
+## Shared Hosting: Laravel in the Domain Root (Non-Standard Setup)
+
+If you cannot place Laravel outside the web root (e.g., on shared hosting where the domain root is the only option), use the following structure:
+
+```
+redeem.sitename.com/                (web root)
+├── index.php                      (edited to point to laravel/ subdir)
+├── build/                         (Vite assets)
+├── storage/                       (symlink to laravel/storage/app/public)
+├── laravel/                       (full Laravel app)
+│   ├── app/
+│   ├── config/
+│   ├── database/
+│   ├── public/                    (not used by web server)
+│   ├── storage/
+│   ├── vendor/
+│   └── ...
+└── ...
+```
+
+### Required Symlinks
+- **build/**: If needed, symlink or copy `build` from the web root to `laravel/public/build` so both Laravel and the web server can access Vite assets.
+- **storage/**: In the web root, create a symlink named `storage` pointing to `laravel/storage/app/public`:
+  ```sh
+  cd /path/to/web/root
+  rm -rf storage  # Remove if a folder or broken symlink exists
+  ln -s laravel/storage/app/public storage
+  ```
+  This allows URLs like `/storage/7/conversions/filename.jpg` to work for user uploads and media conversions.
+
+### index.php
+- The `index.php` in the web root should be edited to require Laravel from the `laravel/` subdirectory:
+  ```php
+  require __DIR__.'/laravel/vendor/autoload.php';
+  $app = require_once __DIR__.'/laravel/bootstrap/app.php';
+  ```
+
+### Notes
+- Do **not** create a `public` or `public_html` directory in the web root unless your host specifically requires it.
+- All public files (index.php, build, storage symlink) should be in the web root.
+- The full Laravel app lives in the `laravel/` subdirectory.
+- This setup is less secure than the standard approach, but is often required on shared hosting. 
