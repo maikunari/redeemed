@@ -4,8 +4,7 @@
         isAuthenticated ? 'mt-auto' : 'absolute bottom-0 w-full'
     ]">
         <div class="flex flex-col items-end text-gray-400">
-            <div class="text-3xl font-black tracking-tight font-['Roboto'] italic drop-shadow-sm">redeem</div>
-            <a href="https://github.com/maikunari/redeemed" target="_blank" rel="noopener noreferrer" class="text-sm hover:text-gray-600 transition-colors">v{{ version }}</a>
+            <div class="text-base font-black tracking-tight font-['Roboto'] italic drop-shadow-sm opacity-60">redeem</div>
         </div>
     </footer>
 </template>
