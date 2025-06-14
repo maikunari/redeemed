@@ -36,7 +36,7 @@ class SettingsController extends Controller
         $settings->card_website_url = $request->card_website_url;
         $settings->card_brand_name = $request->card_brand_name;
         $settings->card_instructions = $request->card_instructions;
-        $settings->card_qr_instruction = $request->card_qr_instruction;
+        $settings->card_qr_instruction = $request->input('card_qr_instruction', '');
         $settings->save();
 
         if ($request->hasFile('logo')) {

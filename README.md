@@ -282,3 +282,6 @@ App\Models\User::create([
 ```
 
 Use the admin account to log in and manage the site. 
+
+touch storage/logs/laravel.log
+chmod 664 storage/logs/laravel.log 
