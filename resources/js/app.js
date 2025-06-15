@@ -9,7 +9,11 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
+    title: (title, page) => {
+        // Use the dynamic site name from Inertia shared props, fallback to appName if not present
+        const siteName = page?.props?.siteName || appName;
+        return `${title} - ${siteName}`;
+    },
     resolve: (name) =>
         resolvePageComponent(
             `./Pages/${name}.vue`,
