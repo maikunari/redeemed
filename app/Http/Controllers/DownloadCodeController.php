@@ -140,23 +140,10 @@ class DownloadCodeController extends Controller
             ]);
         }
 
-        return response()->stream(
-            function () use ($media) {
-                $stream = $media->stream();
-                fpassthru($stream);
-                if (is_resource($stream)) {
-                    fclose($stream);
-                }
-            },
-            200,
-            [
-                'Content-Type' => $media->mime_type,
-                'Content-Length' => $media->size,
-                'Content-Disposition' => 'attachment; filename="' . $media->file_name . '"',
-                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-                'Pragma' => 'no-cache',
-            ]
-        );
+        // Generate a pre-signed URL for the file in Spaces
+        $disk = \Storage::disk($media->disk);
+        $url = $disk->temporaryUrl($media->getPath(), now()->addMinutes(10));
+        return redirect($url);
     }
 
     public function export(File $file)
