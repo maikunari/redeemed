@@ -54,10 +54,10 @@
                                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
                                             <div class="absolute inset-0 flex items-center justify-center">
-                                                <span class="text-sm font-medium text-indigo-600">{{ downloadProgress }}%</span>
+                                                <!-- Removed percentage display -->
                                             </div>
                                         </div>
-                                        <p class="mt-3 text-sm text-gray-600">Downloading your file...</p>
+                                        <p class="mt-3 text-sm text-gray-600">Preparing your download. This may take 2 - 3 minutes for large files. Your download will start automatically.</p>
                                     </div>
                                 </template>
                                 <template v-else>

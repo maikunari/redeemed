@@ -88,6 +88,15 @@ A secure and user-friendly system for managing downloadable content through uniq
    npm run build
    ```
 
+8. **Create FTP Staging and Processed Directories (Required for Bulk Uploads):**
+   On a new deployment, you must manually create the following directories, as they are git-ignored and not included by default:
+   ```bash
+   mkdir -p storage/app/ftp-staging storage/app/ftp-processed
+   chmod -R 775 storage/app/ftp-staging storage/app/ftp-processed
+   chown -R www-data:www-data storage/app/ftp-staging storage/app/ftp-processed
+   ```
+   These directories are required for FTP bulk upload and processing features to work.
+
 ## Development
 - Run development server:
   ```bash
