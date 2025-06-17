@@ -461,68 +461,8 @@ const submit = () => {
     downloadProgress.value = 0;
     form.code = codeDigits.value.join('');
     
-    // Generate a unique request ID for this submission
-    const requestId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-    
-    // Use axios for the download request directly, handling both validation and download in one request
-    axios.post(route('codes.redeem'), 
-        { code: form.code, requestId: requestId },
-        { 
-            responseType: 'blob',
-            headers: {
-                'X-XSRF-TOKEN': usePage().props.csrf_token,
-            }
-        }
-    ).then(response => {
-        // Get filename from the Content-Disposition header
-        const contentDisposition = response.headers['content-disposition'];
-        const filename = contentDisposition
-            ? contentDisposition.split('filename=')[1].replace(/["']/g, '')
-            : 'download';
-
-        // Create a blob URL and trigger download
-        const blob = new Blob([response.data], { type: response.headers['content-type'] });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        
-        // Cleanup
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(link);
-        downloadProgress.value = 100;
-    }).catch(error => {
-        downloadStarted.value = false;
-        if (error.response && error.response.data) {
-            // Log the raw error response for debugging
-            console.error('Raw error response:', error.response);
-            // Try to parse the error message from the response
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const json = JSON.parse(e.target.result);
-                    console.error('Parsed error JSON:', json);
-                    let errorMessage = json.errors?.code || json.message || 'An error occurred during redemption.';
-                    // Ensure errorMessage is a string before calling replace
-                    if (typeof errorMessage !== 'string') {
-                        errorMessage = String(errorMessage);
-                    }
-                    // Remove square brackets from the error message
-                    errorMessage = errorMessage.replace(/\[|\]/g, '');
-                    form.errors.code = errorMessage;
-                } catch (e) {
-                    console.error('Failed to parse error JSON:', e);
-                    form.errors.code = 'An error occurred during redemption.';
-                }
-            };
-            reader.readAsText(error.response.data);
-        } else {
-            console.error('No error response data:', error);
-            form.errors.code = 'Failed to download file. Please try again.';
-        }
-    });
+    // Instead of using Axios, use window.location to follow the 302 redirect
+    window.location = route('codes.redeem');
 };
 
 const handleBackupDownload = () => {

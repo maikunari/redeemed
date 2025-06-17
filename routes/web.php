@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Storage;
 
 Route::get('/', function () {
     return Inertia::render('Redeem/Form');
@@ -53,5 +54,18 @@ Route::post('/contact', [\App\Http\Controllers\SupportController::class, 'store'
 
 // Public route for code redemption
 Route::post('/redeem', [DownloadCodeController::class, 'redeem'])->name('codes.redeem');
+
+Route::get('/test-spaces', function () {
+    try {
+        $result = Storage::disk('spaces')->put('test-laravel.txt', 'hello from laravel');
+        return $result ? 'Success' : 'Failure';
+    } catch (\Throwable $e) {
+        return 'Exception: ' . $e->getMessage() . ' | ' . $e->getFile() . ':' . $e->getLine();
+    }
+});
+
+Route::get('/hello', function () {
+    return 'Hello World';
+});
 
 require __DIR__.'/auth.php';
