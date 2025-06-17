@@ -199,6 +199,7 @@
 <script setup>
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
+import axios from 'axios';
 const page = usePage();
 const siteName = computed(() => page.props.settings?.site_name || 'redeem');
 const logo     = computed(() => page.props.settings?.logo      || '');
@@ -455,29 +456,34 @@ const resetForm = () => {
     form.validate = false;
 };
 
-const submit = () => {
+const submit = async () => {
     form.code = codeDigits.value.join('');
+    downloadStarted.value = true;
+    showSuccess.value = false;
+    showError.value = false;
+    errorMessage.value = '';
+    downloadUrl.value = null;
+    isLoading.value = true;
 
-    const formElement = document.createElement('form');
-    formElement.method = 'POST';
-    formElement.action = route('codes.redeem');
+    try {
+        const response = await axios.post(route('codes.redeem'), { code: form.code });
+        downloadUrl.value = response.data.url;
+        showSuccess.value = true;
+        // Optionally, auto-trigger the download:
+        // window.open(downloadUrl.value, '_blank');
+    } catch (err) {
+        showError.value = true;
+        errorMessage.value = err.response?.data?.errors?.code || 'An error occurred during redemption.';
+        downloadStarted.value = false;
+    } finally {
+        isLoading.value = false;
+    }
+};
 
-    // Get CSRF token from meta tag
-    const csrf = document.createElement('input');
-    csrf.type = 'hidden';
-    csrf.name = '_token';
-    csrf.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    formElement.appendChild(csrf);
-
-    const codeInput = document.createElement('input');
-    codeInput.type = 'hidden';
-    codeInput.name = 'code';
-    codeInput.value = form.code;
-    formElement.appendChild(codeInput);
-
-    document.body.appendChild(formElement);
-    formElement.submit();
-    document.body.removeChild(formElement);
+const triggerDownload = () => {
+    if (downloadUrl.value) {
+        window.open(downloadUrl.value, '_blank');
+    }
 };
 
 const handleBackupDownload = () => {

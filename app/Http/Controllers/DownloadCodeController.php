@@ -143,6 +143,13 @@ class DownloadCodeController extends Controller
         // Generate a pre-signed URL for the file in Spaces
         $disk = \Storage::disk($media->disk);
         $url = $disk->temporaryUrl($media->getPath(), now()->addMinutes(10));
+
+        // If AJAX/JSON request, return JSON with the URL
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['url' => $url]);
+        }
+
+        // Otherwise, redirect as before
         return redirect($url);
     }
 
