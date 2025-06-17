@@ -43,120 +43,99 @@
                             </p>
                         </div>
 
-                        <!-- Success state -->
-                        <div v-if="downloadStarted && !showContactForm" class="space-y-6">
-                            <div class="p-6 bg-green-50 rounded-lg text-center">
-                                <template v-if="downloadProgress < 100">
-                                    <div class="flex flex-col items-center">
-                                        <div class="w-16 h-16 relative">
-                                            <svg class="animate-spin w-16 h-16 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            <div class="absolute inset-0 flex items-center justify-center">
-                                                <!-- Removed percentage display -->
-                                            </div>
-                                        </div>
-                                        <p class="mt-3 text-sm text-gray-600">Preparing your download. This may take 2 - 3 minutes for large files. Your download will start automatically.</p>
-                                    </div>
-                                </template>
-                                <template v-else>
-                                    <svg class="mx-auto h-12 w-12 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <h3 class="mt-4 text-lg font-medium text-green-800">Thank you!</h3>
-                                    <p class="mt-2 text-sm text-green-600">
-                                        Your download has completed successfully.
-                                    </p>
-                                </template>
-                                
-                                <button 
-                                    v-if="!showTroubleshooting && downloadProgress === 100"
-                                    @click="showTroubleshooting = true"
-                                    class="mt-4 text-sm text-indigo-600 hover:text-indigo-800 underline"
-                                >
-                                    Having trouble with your download?
-                                </button>
-                                <div v-if="showTroubleshooting" class="mt-4 text-sm text-gray-600 space-y-2">
-                                    <ul class="list-disc text-left pl-4 space-y-1">
-                                        <li>Check your browser's download settings</li>
-                                        <li>Ensure you have enough storage space</li>
-                                        <li>
-                                            <form @submit.prevent="handleBackupDownload" class="inline">
-                                                <button type="submit" class="underline hover:text-gray-900">Try backup download method</button>
-                                            </form>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <div class="flex flex-col items-center gap-4">
-                                <button
-                                    @click="resetForm"
-                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                >
-                                    Enter Another Code
-                                </button>
-                            </div>
-                        </div>
-
                         <!-- Code input form and Contact Form -->
                         <div class="relative">
                             <div v-show="!showContactForm">
-                                <form v-if="!downloadStarted" @submit.prevent="submit" class="space-y-8">
-                                    <div>
-                                        <label class="sr-only">Download Code</label>
-                                        <div class="flex justify-center gap-1.5 sm:gap-3 items-center">
-                                            <div class="flex gap-1.5 sm:gap-3">
-                                                <template v-for="index in 6" :key="`digit-${index}`">
-                                                    <input
-                                                        type="text"
-                                                        inputmode="numeric"
-                                                        maxlength="1"
-                                                        pattern="[2-9]"
-                                                        v-model="codeDigits[index - 1]"
-                                                        :ref="el => { if (el) codeInputs[index - 1] = el }"
-                                                        @input="handleInput(index - 1)"
-                                                        @keydown="handleKeydown($event, index - 1)"
-                                                        @paste="handlePaste"
-                                                        class="w-[2.75rem] h-[2.75rem] sm:w-12 sm:h-14 text-center text-lg sm:text-2xl font-semibold border-2 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                                        :class="{
-                                                            'border-red-300 text-red-900': form.errors.code,
-                                                            'border-gray-300': !form.errors.code
-                                                        }"
-                                                        :disabled="form.processing"
-                                                    >
-                                                </template>
+                                <!-- Two-step download flow UI -->
+                                <div v-if="!downloadStarted && !showSuccess && !showError">
+                                    <form @submit.prevent="submit" class="space-y-8">
+                                        <div>
+                                            <label class="sr-only">Download Code</label>
+                                            <div class="flex justify-center gap-1.5 sm:gap-3 items-center">
+                                                <div class="flex gap-1.5 sm:gap-3">
+                                                    <template v-for="index in 6" :key="`digit-${index}`">
+                                                        <input
+                                                            type="text"
+                                                            inputmode="numeric"
+                                                            maxlength="1"
+                                                            pattern="[2-9]"
+                                                            v-model="codeDigits[index - 1]"
+                                                            :ref="el => { if (el) codeInputs[index - 1] = el }"
+                                                            @input="handleInput(index - 1)"
+                                                            @keydown="handleKeydown($event, index - 1)"
+                                                            @paste="handlePaste"
+                                                            class="w-[2.75rem] h-[2.75rem] sm:w-12 sm:h-14 text-center text-lg sm:text-2xl font-semibold border-2 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                            :class="{
+                                                                'border-red-300 text-red-900': form.errors.code,
+                                                                'border-gray-300': !form.errors.code
+                                                            }"
+                                                            :disabled="form.processing"
+                                                        >
+                                                    </template>
+                                                </div>
+                                            </div>
+                                            <p v-if="form.errors.code" class="mt-3 text-sm text-center text-red-600">
+                                                {{ form.errors.code }}
+                                            </p>
+                                            <div v-if="form.errors.code" class="mt-3 flex justify-center gap-4 text-sm">
+                                                <button type="button" @click="resetForm" class="text-indigo-600 hover:text-indigo-800 underline">
+                                                    Try again
+                                                </button>
                                             </div>
                                         </div>
-                                        <p v-if="form.errors.code" class="mt-3 text-sm text-center text-red-600">
-                                            {{ form.errors.code }}
-                                        </p>
-                                        <div v-if="form.errors.code" class="mt-3 flex justify-center gap-4 text-sm">
-                                            <button type="button" @click="resetForm" class="text-indigo-600 hover:text-indigo-800 underline">
-                                                Try again
+
+                                        <div>
+                                            <button
+                                                type="submit"
+                                                :disabled="!isCodeComplete || form.processing || form.errors.code"
+                                                class="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-base sm:text-sm font-medium text-white bg-indigo-600 transition-all duration-150"
+                                                :class="{
+                                                    'opacity-75 cursor-not-allowed': !isCodeComplete || form.processing || form.errors.code,
+                                                    'hover:bg-indigo-700': isCodeComplete && !form.processing
+                                                }"
+                                            >
+                                                <svg v-if="form.processing" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                {{ form.processing ? 'Processing...' : 'Download File' }}
                                             </button>
                                         </div>
-                                    </div>
+                                    </form>
+                                </div>
 
-                                    <div>
-                                        <button
-                                            type="submit"
-                                            :disabled="!isCodeComplete || form.processing || form.errors.code"
-                                            class="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-base sm:text-sm font-medium text-white bg-indigo-600 transition-all duration-150"
-                                            :class="{
-                                                'opacity-75 cursor-not-allowed': !isCodeComplete || form.processing || form.errors.code,
-                                                'hover:bg-indigo-700': isCodeComplete && !form.processing
-                                            }"
-                                        >
-                                            <svg v-if="form.processing" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            {{ form.processing ? 'Processing...' : 'Download File' }}
-                                        </button>
+                                <div v-if="downloadStarted && isLoading">
+                                    <!-- Spinner and 'Preparing your download...' message -->
+                                    <div class="p-6 bg-green-50 rounded-lg text-center">
+                                        <svg class="animate-spin w-16 h-16 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <p class="mt-3 text-sm text-gray-600">Preparing your download. This may take 2 - 3 minutes for large files. Your download will start automatically.</p>
                                     </div>
-                                </form>
+                                </div>
+
+                                <div v-if="showSuccess">
+                                    <!-- Success message and Download button -->
+                                    <div class="p-6 bg-green-50 rounded-lg text-center">
+                                        <svg class="mx-auto h-12 w-12 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <h3 class="mt-4 text-lg font-medium text-green-800">Thank you!</h3>
+                                        <p class="mt-2 text-sm text-green-600">Your download is ready.</p>
+                                        <button @click="triggerDownload" class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded">Download File</button>
+                                        <button @click="resetForm" class="mt-4 px-4 py-2 bg-gray-200 text-gray-700 rounded">Enter Another Code</button>
+                                    </div>
+                                </div>
+
+                                <div v-if="showError">
+                                    <!-- Error message -->
+                                    <div class="p-6 bg-red-50 rounded-lg text-center">
+                                        <h3 class="mt-4 text-lg font-medium text-red-800">Error</h3>
+                                        <p class="mt-2 text-sm text-red-600">{{ errorMessage }}</p>
+                                        <button @click="resetForm" class="mt-4 px-4 py-2 bg-gray-200 text-gray-700 rounded">Try Again</button>
+                                    </div>
+                                </div>
                             </div>
 
                             <div v-show="showContactForm">
