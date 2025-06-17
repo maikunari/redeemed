@@ -456,13 +456,28 @@ const resetForm = () => {
 };
 
 const submit = () => {
-    // Reset states
-    downloadStarted.value = true;
-    downloadProgress.value = 0;
     form.code = codeDigits.value.join('');
-    
-    // Instead of using Axios, use window.location to follow the 302 redirect
-    window.location = route('codes.redeem');
+
+    const formElement = document.createElement('form');
+    formElement.method = 'POST';
+    formElement.action = route('codes.redeem');
+
+    // Get CSRF token from meta tag
+    const csrf = document.createElement('input');
+    csrf.type = 'hidden';
+    csrf.name = '_token';
+    csrf.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    formElement.appendChild(csrf);
+
+    const codeInput = document.createElement('input');
+    codeInput.type = 'hidden';
+    codeInput.name = 'code';
+    codeInput.value = form.code;
+    formElement.appendChild(codeInput);
+
+    document.body.appendChild(formElement);
+    formElement.submit();
+    document.body.removeChild(formElement);
 };
 
 const handleBackupDownload = () => {
